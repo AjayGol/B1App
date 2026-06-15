@@ -103,17 +103,7 @@ export interface ChatPayloadInterface extends SocketPayloadInterface { churchId:
 export interface ChatStateInterface { mainConversation: ConversationInterface | null, hostConversation: ConversationInterface | null, user: ChatUserInterface }
 export interface ChatUserInterface { firstName: string, lastName: string, isHost: boolean }
 
-export interface FileInterface {
-  id?: string;
-  contentType?: string;
-  contentId?: string;
-  fileName?: string;
-  contentPath?: string;
-  fileType?: string;
-  size?: number;
-  dateModified?: Date;
-  fileContents?: string;
-}
+export type { FileInterface } from "@churchapps/helpers";
 
 
 
@@ -283,4 +273,37 @@ export interface ExternalVenueRefInterface {
   studyId: string;
   lessonId: string;
   venueId: string;
+}
+
+// Mirrors @churchapps/helpers — switch to the package exports once >1.7.1 is published.
+export interface CampaignInterface {
+  id?: string;
+  name?: string;
+  description?: string;
+  goalAmount?: number;
+  startDate?: string;
+  endDate?: string;
+  allowSelfPledge?: boolean;
+}
+
+export interface PledgeInterface {
+  id?: string;
+  churchId?: string;
+  campaignId?: string;
+  personId?: string;
+  amount?: number;
+}
+
+export type PledgeStatus = "notStarted" | "inProgress" | "fulfilled" | "beyondPledged" | "nonPledged";
+
+export interface CampaignProgressInterface {
+  campaign?: CampaignInterface;
+  totalPledged?: number;
+  totalGiven?: number;
+}
+
+export interface MyPledgeInterface {
+  pledge?: PledgeInterface;
+  givenAmount?: number;
+  status?: PledgeStatus;
 }
