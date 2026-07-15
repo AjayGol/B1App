@@ -1,9 +1,11 @@
 import React, { cache } from "react";
 import { PageLayout, Theme } from "@/components";
 import { ChurchJsonLd } from "@/components/seo/ChurchJsonLd";
-import { ApiHelper, Locale } from "@churchapps/apphelper";
+import { EventJsonLd } from "@/components/seo/EventJsonLd";
+import { SermonVideoJsonLd } from "@/components/seo/SermonVideoJsonLd";
+import { Locale } from "@churchapps/apphelper";
 import { ConfigHelper, EnvironmentHelper, PageInterface } from "@/helpers";
-import { ConfigurationInterface } from "@/helpers/ConfigHelper";
+import { ConfigurationInterface, fetchCachedOrNull } from "@/helpers/ConfigHelper";
 import { MetaHelper } from "@/helpers/MetaHelper";
 import { Metadata } from "next";
 import "@/styles/vendor/animations.css";
@@ -12,9 +14,13 @@ import { VotdPage } from "./components/VotdPage";
 import { BiblePage } from "./components/BiblePage";
 import { StreamPage } from "./components/StreamPage";
 import { DefaultPageWrapper } from "./components/DefaultPageWrapper";
-import { notFound } from "next/navigation";
+import { notFound, permanentRedirect } from "next/navigation";
 import { SermonsPage } from "./components/SermonsPage";
 import { DonatePage } from "./components/DonatePage";
+import { RestrictedPage } from "@/components/RestrictedPage";
+import { resolveRedirect } from "@/helpers/RedirectHelper";
+
+const VIRTUAL_PAGE_SLUGS = ["votd", "bible", "donate", "stream", "sermons"];
 
 type PageParams = Promise<{ sdSlug: string; pageSlug: string; }>
 
@@ -38,19 +44,37 @@ export async function generateMetadata({ params }: {params:PageParams}): Promise
     }
   }
   const pageTitle = title || props.config.church.name;
-  return MetaHelper.getMetaData(pageTitle + " - " + props.config.church.name, pageTitle, undefined, props.config.appearance);
+  const description = props.pageData?.metaDescription || pageTitle;
+  return MetaHelper.getMetaData(pageTitle + " - " + props.config.church.name, description, undefined, props.config.appearance);
 }
 
 const loadData = async (sdSlug:string, pageSlug:string) => {
   const config: ConfigurationInterface = await ConfigHelper.load(sdSlug, "website");
-  const pageData: PageInterface = await ApiHelper.getAnonymous("/pages/" + config.church.id + "/tree?url=" + pageSlug, "ContentApi");
-  return { pageData, config };
+  const pageData = await fetchCachedOrNull<PageInterface>("/pages/" + config.church.id + "/tree?url=" + pageSlug + (config.siteId ? "&siteId=" + config.siteId : ""), "ContentApi", sdSlug);
+  return { pageData: pageData || ({} as PageInterface), config };
 };
 
 export default async function Home({ params }: { params: PageParams }) {
   await EnvironmentHelper.initServerSide();
   const { sdSlug, pageSlug } = await params;
   const { pageData, config } = await loadSharedData(sdSlug, pageSlug);
+
+  if (!pageData?.url && !VIRTUAL_PAGE_SLUGS.includes(pageSlug)) {
+    const to = await resolveRedirect(config.church.id || "", sdSlug, "/" + pageSlug);
+    if (to) permanentRedirect(to);
+    return notFound();
+  }
+
+  if ((pageData as any)?.restricted) {
+    return (
+      <>
+        <Theme config={config} />
+        <DefaultPageWrapper config={config}>
+          <RestrictedPage config={config} pageUrl={pageSlug} siteId={config.siteId} />
+        </DefaultPageWrapper>
+      </>
+    );
+  }
 
   const getPageContent = () => {
     let result = <PageLayout config={config} pageData={pageData} />;
@@ -76,6 +100,8 @@ export default async function Home({ params }: { params: PageParams }) {
     <>
       <Theme config={config} />
       <ChurchJsonLd config={config} />
+      <EventJsonLd config={config} pageData={pageData} sdSlug={sdSlug} />
+      <SermonVideoJsonLd config={config} pageData={pageData} sdSlug={sdSlug} sermonsPage={!pageData?.url && pageSlug === "sermons"} />
       {getPageContent()}
       <Animate />
     </>

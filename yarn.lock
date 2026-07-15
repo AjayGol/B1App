@@ -177,7 +177,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@babel/types@npm:^7.29.7":
+"@babel/types@npm:^7.26.0, @babel/types@npm:^7.29.7":
   version: 7.29.7
   resolution: "@babel/types@npm:7.29.7"
   dependencies:
@@ -187,9 +187,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@churchapps/apphelper@npm:^0.17.4":
-  version: 0.17.4
-  resolution: "@churchapps/apphelper@npm:0.17.4"
+"@churchapps/apphelper@npm:^0.22.2":
+  version: 0.22.2
+  resolution: "@churchapps/apphelper@npm:0.22.2"
   dependencies:
     "@emotion/cache": "npm:^11.14.0"
     "@emotion/react": "npm:^11.14.0"
@@ -250,20 +250,20 @@ __metadata:
       optional: true
     react-google-recaptcha:
       optional: true
-  checksum: 10c0/871d7d9329c9a5fc114dd970e2b915caabb7966604ac66b6dbeedb111aa4f7e5c786e3f02f5f4f8e66d0811cb7ef428aec2122635a6407927ef6e4e633dd7230
+  checksum: 10c0/27f510a6084575f1e9b6c3f231a865b24c7ecd9075ed27be4750cc8142aa865a01912f72116fe973ac712663b9de438cec60f080664f5e72a7c99adda65c6de3
   languageName: node
   linkType: hard
 
-"@churchapps/content-providers@npm:^0.4.1":
-  version: 0.4.1
-  resolution: "@churchapps/content-providers@npm:0.4.1"
-  checksum: 10c0/d698cc8f584b643d0b454b9370019dfa78a2fac58fd4f097894d173334bc43ef95a27adaba6c0a98701f8e51995ffacad93a5559f24870ed6e80a38623ab07fe
+"@churchapps/content-providers@npm:^0.7.0":
+  version: 0.7.0
+  resolution: "@churchapps/content-providers@npm:0.7.0"
+  checksum: 10c0/8f602ade3b37922ac9291048dd7a1b622ab1c66178b1fca24d0d26868ecdef9e3ff924c20b9f16f5cf1181bcfaed1defe790ac4851a3a7bbaaf8c7f0538cf89f
   languageName: node
   linkType: hard
 
-"@churchapps/helpers@npm:^1.8.2":
-  version: 1.8.2
-  resolution: "@churchapps/helpers@npm:1.8.2"
+"@churchapps/helpers@npm:^1.11.1":
+  version: 1.11.1
+  resolution: "@churchapps/helpers@npm:1.11.1"
   dependencies:
     dayjs: "npm:^1.11.20"
   peerDependencies:
@@ -271,7 +271,7 @@ __metadata:
   peerDependenciesMeta:
     rrule:
       optional: true
-  checksum: 10c0/24066322b8a48c464e6e678f33710422bd81226f2c2acb870ef0b190f676ca493f5a7ed71eaf1e4393f0050014b00e8bb5949d1671791cbe2950667aa1cb38f3
+  checksum: 10c0/e09a1dd1113a0410baa835731f941e991b36042d7ec7086dcb318534342d7a392593d78c06f2d86f3c323040a1e753145bb64bae2fa6b79d041793e86628e37c
   languageName: node
   linkType: hard
 
@@ -4160,9 +4160,9 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "b1-app@workspace:."
   dependencies:
-    "@churchapps/apphelper": "npm:^0.17.4"
-    "@churchapps/content-providers": "npm:^0.4.1"
-    "@churchapps/helpers": "npm:^1.8.2"
+    "@churchapps/apphelper": "npm:^0.22.2"
+    "@churchapps/content-providers": "npm:^0.7.0"
+    "@churchapps/helpers": "npm:^1.11.1"
     "@emotion/react": "npm:^11.14.0"
     "@emotion/styled": "npm:^11.14.1"
     "@mui/icons-material": "npm:^7.3.11"
@@ -4189,6 +4189,7 @@ __metadata:
     "@youversion/platform-react-hooks": "npm:^0.5.8"
     "@youversion/platform-react-ui": "npm:^1.25.0"
     axios: "npm:^1.16.0"
+    babel-plugin-react-compiler: "npm:^1.0.0"
     copyfiles: "npm:^2.4.1"
     dayjs: "npm:^1.11.20"
     eslint: "npm:^9.39.4"
@@ -4199,8 +4200,10 @@ __metadata:
     flexsearch: "npm:0.8.212"
     idb-keyval: "npm:^6.2.2"
     js-cookie: "npm:^3.0.5"
+    material-icons: "npm:^1.13.14"
     material-ui-popup-state: "npm:^5.3.6"
     next: "npm:^16.2.6"
+    qrcode.react: "npm:^4.2.0"
     react: "npm:^19.2.6"
     react-activity: "npm:^2.1.3"
     react-big-calendar: "npm:^1.19.4"
@@ -4235,6 +4238,15 @@ __metadata:
     cosmiconfig: "npm:^7.0.0"
     resolve: "npm:^1.19.0"
   checksum: 10c0/c6dfb15de96f67871d95bd2e8c58b0c81edc08b9b087dc16755e7157f357dc1090a8dc60ebab955e92587a9101f02eba07e730adc253a1e4cf593ca3ebd3839c
+  languageName: node
+  linkType: hard
+
+"babel-plugin-react-compiler@npm:^1.0.0":
+  version: 1.0.0
+  resolution: "babel-plugin-react-compiler@npm:1.0.0"
+  dependencies:
+    "@babel/types": "npm:^7.26.0"
+  checksum: 10c0/9406267ada8d7dbdfe8906b40ecadb816a5f4cee2922bee23f7729293b369624ee135b5a9b0f263851c263c9787522ac5d97016c9a2b82d1668300e42b18aff8
   languageName: node
   linkType: hard
 
@@ -6475,6 +6487,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"material-icons@npm:^1.13.14":
+  version: 1.13.14
+  resolution: "material-icons@npm:1.13.14"
+  checksum: 10c0/4c0f9a8ff02545ce7747c621b5ffa1738212628189c9419f4cd2e75f7f8cf9e98ed5f946724a2d7e169cfebc439875df0ba9f79ba94a574e16cbb0c5ce26e55a
+  languageName: node
+  linkType: hard
+
 "material-symbols@npm:^0.33.0":
   version: 0.33.0
   resolution: "material-symbols@npm:0.33.0"
@@ -7205,6 +7224,15 @@ __metadata:
   version: 2.3.1
   resolution: "punycode@npm:2.3.1"
   checksum: 10c0/14f76a8206bc3464f794fb2e3d3cc665ae416c01893ad7a02b23766eb07159144ee612ad67af5e84fa4479ccfe67678c4feb126b0485651b302babf66f04f9e9
+  languageName: node
+  linkType: hard
+
+"qrcode.react@npm:^4.2.0":
+  version: 4.2.0
+  resolution: "qrcode.react@npm:4.2.0"
+  peerDependencies:
+    react: ^16.8.0 || ^17.0.0 || ^18.0.0 || ^19.0.0
+  checksum: 10c0/68c691d130e5fda2f57cee505ed7aea840e7d02033100687b764601f9595e1116e34c13876628a93e1a5c2b85e4efc27d30b2fda72e2050c02f3e1c4e998d248
   languageName: node
   linkType: hard
 

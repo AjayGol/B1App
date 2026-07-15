@@ -127,10 +127,18 @@
 		},
 		"recurring": {
 			"amount": "Amount",
+			"confirmPause": "Are you sure you want to pause this recurring donation?",
 			"every": "Every",
 			"interval": "Interval",
 			"notFound": "Payment method not found.",
+			"paused": "Paused",
+			"pausedMessage": "Recurring donation paused.",
+			"pauseFailed": "Failed to pause recurring donation. Please try again.",
+			"pauseTooltip": "Pause recurring donation",
 			"paymentMethod": "Payment Method",
+			"resumedMessage": "Recurring donation resumed.",
+			"resumeFailed": "Failed to resume recurring donation. Please try again.",
+			"resumeTooltip": "Resume recurring donation",
 			"startDate": "Start Date"
 		},
 		"kingdomFunding": {
@@ -160,10 +168,54 @@
 			}
 		}
 	},
+	"eventCalendar": {
+		"recurring": {
+			"day": {
+				"friday": "Friday",
+				"monday": "Monday",
+				"saturday": "Saturday",
+				"sunday": "Sunday",
+				"thursday": "Thursday",
+				"tuesday": "Tuesday",
+				"wednesday": "Wednesday"
+			},
+			"endDate": "End Date",
+			"endDateAria": "Recurrence end date",
+			"ends": "Ends",
+			"endsAfter": "After",
+			"endsAria": "Select when recurrence ends",
+			"endsOn": "On",
+			"freqDay": "Day",
+			"freqMonth": "Month",
+			"freqWeek": "Week",
+			"frequency": "Frequency",
+			"frequencyAria": "Select recurrence frequency",
+			"interval": "Interval",
+			"intervalAria": "Recurrence interval",
+			"monthlyOnDay": "Monthly on day {}",
+			"monthlyOnNth": "Monthly on the {ordinal} {day}",
+			"monthlyOptionAria": "Select monthly recurrence option",
+			"never": "Never",
+			"occurrences": "Occurances",
+			"occurrencesAria": "Number of recurrence occurrances",
+			"on": "On",
+			"ordinal": {
+				"first": "first",
+				"fourth": "fourth",
+				"last": "last",
+				"second": "second",
+				"third": "third"
+			},
+			"toggleWeekday": "Toggle {} for weekly recurrence"
+		}
+	},
 	"fileUpload": {
 		"file": "File"
 	},
 	"formSubmissionEdit": {
+		"back": "Back",
+		"continue": "Continue",
+		"stepProgress": "{current} of {total}",
 		"confirmDelete": "Are you sure you wish to delete this form data?",
 		"editForm": "Edit Form",
 		"isRequired": "is required",
@@ -180,6 +232,8 @@
 		"search": "Search icons..."
 	},
 	"login": {
+		"continueGoogle": "Continue with Google",
+		"continueMicrosoft": "Continue with Microsoft",
 		"createAccount": "Create an Account",
 		"email": "Email",
 		"enterCode": "Enter Verification Code",
@@ -190,6 +244,7 @@
 		"login": "Login",
 		"noAcc": "Don't have an account?",
 		"noAccountFound": "No account was found with that email. Please register to continue.",
+		"or": "or",
 		"password": "Password",
 		"register": "Register",
 		"registerThankYou": "Thank you for registering! Please check your email to verify your account.",
@@ -202,6 +257,7 @@
 		"setPassword": "Set Password",
 		"signIn": "Sign In",
 		"signInTitle": "Please Sign In",
+		"ssoError": "Sign-in with that provider failed. Please try again.",
 		"validate": {
 			"code": "Please enter the 6-digit code.",
 			"email": "Please enter a valid email address.",

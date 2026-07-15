@@ -1,14 +1,11 @@
 import { test, expect, type Page } from "@playwright/test";
 
-// Real end-to-end Stripe test-mode donations against the demo Grace gateway
-// (pk_test_..., USD, seeded in giving/demo.sql). These drive the actual Stripe
-// CardElement iframe with test cards and hit /donate/charge, /donate/subscribe,
-// and /paymentmethods/* for real. Authenticated (demo@b1.church) member flow —
-// the guest flow is reCAPTCHA-gated and not exercisable headless.
+// Shared mutable Stripe test customer; serial to prevent card-wipe races between blocks.
+test.describe.configure({ mode: "serial" });
 
 const CARD_OK = "4242424242424242";
-const CARD_OK2 = "5555555555554444"; // mastercard — distinct fingerprint from CARD_OK
-const CARD_DECLINE = "4000000000000002"; // generic_decline at charge time
+const CARD_OK2 = "5555555555554444";
+const CARD_DECLINE = "4000000000000002";
 const STRIPE_CARD_FRAME = 'iframe[title="Secure card payment input frame"]';
 
 async function fillStripeCard(page: Page, number: string, exp = "1234", cvc = "123", postal = "42424") {
@@ -59,14 +56,18 @@ async function openManageTab(page: Page) {
   await page.getByRole("heading", { name: "Payment Methods" }).waitFor({ state: "visible", timeout: 20000 });
 }
 
-// Fund-amount + payment-method entry, adaptive: inline Stripe entry when no saved
-// card exists, otherwise the saved-method select (default selection is fine).
+// RecurringDonations renders only after subscriptions query resolves.
+async function openHistoryTab(page: Page) {
+  await page.goto("/mobile/donate");
+  const tab = page.getByRole("tab", { name: /History/i });
+  await tab.waitFor({ state: "visible", timeout: 20000 });
+  await tab.click();
+}
+
 async function fillDonationDetails(page: Page, amount: string, card: string) {
   await page.locator("#donation-details").waitFor({ state: "visible", timeout: 15000 });
   await page.locator('input[name="amount"]').first().fill(amount);
-  // Wait for whichever payment UI renders: the inline Stripe iframe (no saved
-  // card) or the saved-method select. The Stripe iframe loads async, so a bare
-  // count() races it.
+  // Stripe iframe loads async; bare count() races it.
   const frame = page.locator(STRIPE_CARD_FRAME);
   const select = page.locator("#payment-method-select");
   await expect(frame.or(select).first()).toBeVisible({ timeout: 20000 });
@@ -80,9 +81,7 @@ async function submitDonation(page: Page) {
   await donateBtn.click();
 }
 
-// The add menu (PaymentMethods.MenuIcon) is defined inside render, so a background
-// gateway refetch can remount it and dismiss an open menu — retry until the
-// CardForm iframe appears.
+// Menu can remount and dismiss on gateway refetch; retry until CardForm iframe appears.
 async function addCardViaManage(page: Page, card: string) {
   await openManageTab(page);
   await expect(async () => {
@@ -97,8 +96,7 @@ async function addCardViaManage(page: Page, card: string) {
 async function deleteAllCards(page: Page) {
   page.on("dialog", (d) => d.accept());
   await openManageTab(page);
-  // Stay on the live view; the component invalidates + refetches after each
-  // delete. Re-navigating would restore the (now stale) persisted cache.
+  // Component invalidates + refetches after each delete; re-nav would restore stale cache.
   for (let i = 0; i < 8; i++) {
     const count = await page.getByLabel("edit-button").count();
     if (count === 0) break;
@@ -134,8 +132,6 @@ test.describe.serial("Stripe member donations (real test-mode charges)", () => {
     let ok = true;
     await expect(page.getByText(/added|saved/i).first()).toBeVisible({ timeout: 30000 }).catch(() => { ok = false; });
     if (!ok) console.log("DIAG:\n" + diag.join("\n"));
-    // The newly added (distinct) card appears on the live view after the
-    // post-save invalidate + refetch (no re-navigation -> no stale cache).
     await expect(page.getByText(/\*{2,4}4444/).first()).toBeVisible({ timeout: 30000 });
   });
 
@@ -153,6 +149,41 @@ test.describe.serial("Stripe member donations (real test-mode charges)", () => {
     expect(ok, "No success Alert after recurring donation").toBe(true);
   });
 
+  test("pause and resume the recurring donation, then cancel it (RecurringDonations)", async ({ page }) => {
+    const diag = captureDiagnostics(page);
+    page.on("dialog", (d) => d.accept()); // window.confirm on pause + cancel
+
+    await openHistoryTab(page);
+    const recurringBox = page.locator('[data-testid="recurring-donations"]');
+    await expect(recurringBox).toBeVisible({ timeout: 20000 });
+    const pauseBtn = recurringBox.locator('button[aria-label="pause-subscription"]').first();
+    await expect(pauseBtn).toBeVisible({ timeout: 20000 });
+
+    const pausePost = page.waitForResponse((r) => /\/subscriptions\/.+\/pause/.test(r.url()) && r.request().method() === "POST", { timeout: 15000 });
+    await pauseBtn.click();
+    const pauseResp = await pausePost;
+    if (!pauseResp.ok()) console.log("DIAG:\n" + diag.join("\n"));
+    expect(pauseResp.ok(), "pause response ok").toBe(true);
+
+    await expect(recurringBox.getByText("Paused", { exact: true })).toBeVisible({ timeout: 15000 });
+    const resumeBtn = recurringBox.locator('button[aria-label="resume-subscription"]').first();
+    await expect(resumeBtn).toBeVisible({ timeout: 10000 });
+
+    const resumePost = page.waitForResponse((r) => /\/subscriptions\/.+\/resume/.test(r.url()) && r.request().method() === "POST", { timeout: 15000 });
+    await resumeBtn.click();
+    const resumeResp = await resumePost;
+    expect(resumeResp.ok(), "resume response ok").toBe(true);
+
+    await expect(recurringBox.getByText("Paused", { exact: true })).toHaveCount(0, { timeout: 15000 });
+    await expect(recurringBox.locator('button[aria-label="pause-subscription"]').first()).toBeVisible({ timeout: 15000 });
+
+    // Cleanup: cancel so this recurring donation doesn't linger for the next run.
+    const cancelDelete = page.waitForResponse((r) => /\/subscriptions\//.test(r.url()) && r.request().method() === "DELETE", { timeout: 15000 });
+    await recurringBox.locator('button[aria-label="cancel-subscription"]').first().click();
+    const cancelResp = await cancelDelete;
+    expect(cancelResp.ok(), "cancel response ok").toBe(true);
+  });
+
   test("delete a card via Manage tab", async ({ page }) => {
     const diag = captureDiagnostics(page);
     await openManageTab(page);
@@ -163,7 +194,6 @@ test.describe.serial("Stripe member donations (real test-mode charges)", () => {
     await page.getByLabel("edit-button").first().click();
     await page.locator('button[aria-label="delete-button"], button:has-text("Delete")').first().click();
 
-    // Live view refetches after the delete's invalidate; count drops by one.
     await expect(page.getByLabel("edit-button"), "card count should drop by one after delete")
       .toHaveCount(before - 1, { timeout: 30000 }).catch(() => { console.log("DIAG:\n" + diag.join("\n")); throw new Error("delete did not reduce card count"); });
   });
@@ -172,13 +202,7 @@ test.describe.serial("Stripe member donations (real test-mode charges)", () => {
 test.describe("Stripe guest (unauthenticated) donation", () => {
   test.use({ storageState: { cookies: [], origins: [] } });
 
-  // Backend now allows anonymous card add: PaymentMethodController /addcard no longer
-  // requires au.personId to match (2026-06-30 fix — the authz hardening had broken all
-  // guest card giving with a 401). The guest flow is wired end to end now:
-  // /users/loadOrCreate, /people/loadOrCreate, /paymentmethods/addcard and /donate/charge
-  // all tolerate an empty au. Still parked as fixme because it needs the dev server with
-  // NEXT_PUBLIC_BYPASS_RECAPTCHA=true and live Stripe test keys; un-fixme to verify against
-  // that env.
+  // Needs NEXT_PUBLIC_BYPASS_RECAPTCHA=true and live Stripe test keys.
   test.fixme("a guest can donate with the test card", async ({ page }) => {
     const diag = captureDiagnostics(page);
     await page.goto("/mobile/donate");
@@ -202,24 +226,19 @@ test.describe("Stripe guest (unauthenticated) donation", () => {
 });
 
 test.describe.serial("Stripe donation error handling", () => {
-  // Runs after the member tests churn Stripe test customers/cards; a stale
-  // detached-card state can occasionally surface a different (still clean) error.
-  // One retry from a fresh deleteAllCards clears it; a real regression fails twice.
+  // Stale card state can surface different errors; one retry from clean state clears it.
   test.describe.configure({ retries: 1 });
 
   test("a declined card surfaces an error (no stuck spinner)", async ({ page }) => {
     const diag = captureDiagnostics(page);
     await deleteAllCards(page); // clean slate -> inline entry shows the decline card
 
-    // Switch to the Donate tab in-page (no re-navigation) so the live 0-card
-    // state holds and the inline card entry renders.
+    // In-page tab switch (not re-nav) keeps live 0-card state for inline card entry.
     await page.getByRole("tab", { name: /^Donate$/i }).click();
     await page.locator("#single-donation-button").waitFor({ state: "visible", timeout: 15000 });
     await fillDonationDetails(page, "5", CARD_DECLINE);
     await submitDonation(page);
 
-    // A clean, human-readable error must appear (declined / cannot be used /
-    // etc.), never raw JSON, and the modal/spinner must not hang indefinitely.
     const errAlert = page.getByRole("alert").filter({ hasText: /declin|payment|card|error|fail|cannot|could not/i }).first();
     let errored = true;
     await expect(errAlert).toBeVisible({ timeout: 45000 }).catch(() => { errored = false; });
@@ -227,7 +246,6 @@ test.describe.serial("Stripe donation error handling", () => {
     expect(errored, "failed charge produced no visible error (stuck spinner / silent failure)").toBe(true);
     await expect(errAlert).not.toContainText("{"); // no raw JSON leaking to donors
 
-    // Form must remain recoverable: preview modal closed, submit button enabled.
     await expect(page.locator('button[aria-label="donate-button"]')).toHaveCount(0, { timeout: 10000 });
     await expect(page.locator('button[aria-label="save-button"]')).toBeEnabled({ timeout: 10000 });
   });
@@ -239,7 +257,6 @@ test.describe.serial("Stripe donation error handling", () => {
     await page.locator("#donation-details").waitFor({ state: "visible", timeout: 15000 });
     await page.locator('input[name="amount"]').first().fill("5");
 
-    // Enter a card but OMIT the postal code -> Stripe reports an incomplete card.
     const frame = page.frameLocator(STRIPE_CARD_FRAME);
     await frame.locator('[name="cardnumber"]').waitFor({ state: "visible", timeout: 20000 });
     await frame.locator('[name="cardnumber"]').fill(CARD_OK);
@@ -251,13 +268,9 @@ test.describe.serial("Stripe donation error handling", () => {
     const toast = page.getByText(/postal code is incomplete/i);
     await expect(toast).toBeVisible({ timeout: 20000 });
 
-    // Let the error Snackbar auto-hide (autoHideDuration 6s).
     await expect(toast).toBeHidden({ timeout: 12000 });
 
-    // Fix the card and re-open the preview. The stale error toast must NOT pop up
-    // again just because re-previewing re-rendered the form. Check the raw DOM
-    // (offset-based visibility) since the open modal makes Playwright treat the
-    // toast as aria-hidden.
+    // Open modal makes Playwright treat toast as aria-hidden; check offset visibility.
     await frame.locator('[name="postal"]').fill("42424");
     await page.locator('button[aria-label="save-button"]').click(); // Preview again
     await page.waitForTimeout(900);

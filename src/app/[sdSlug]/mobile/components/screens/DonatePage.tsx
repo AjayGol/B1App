@@ -1,7 +1,6 @@
 "use client";
 
 import React, { Suspense, useContext, useEffect, useMemo, useState } from "react";
-import { loadStripe, Stripe } from "@stripe/stripe-js";
 import {
   Box,
   Button,
@@ -26,9 +25,8 @@ import {
 import {
   RecurringDonations,
   PaymentMethods,
-  StripePaymentMethod as AppHelperStripePaymentMethod,
+  SavedPaymentMethod,
   MultiGatewayDonationForm,
-  DonationHelper,
   getPaymentProvider
 } from "@churchapps/apphelper/donations";
 import type { PaymentGateway } from "@churchapps/apphelper/donations";
@@ -85,7 +83,7 @@ function DonatePageInner({ config }: Props) {
   });
 
   interface PaymentData {
-    paymentMethods: AppHelperStripePaymentMethod[];
+    paymentMethods: SavedPaymentMethod[];
     customerId: string | null;
     person: PersonInterface | null;
     currency: string;
@@ -103,19 +101,18 @@ function DonatePageInner({ config }: Props) {
         ApiHelper.get("/paymentmethods/personid/" + personId, "GivingApi") as Promise<{ provider?: string; customerId?: string }[]>,
         ApiHelper.get("/people/" + personId, "MembershipApi") as Promise<PersonInterface>
       ]);
-      const pms: AppHelperStripePaymentMethod[] = [];
+      const pms: SavedPaymentMethod[] = [];
       let customerId: string | null = null;
       if (Array.isArray(methodsResult)) {
         for (const pm of methodsResult) {
-          if (getPaymentProvider(pm.provider).capabilities.savedCard) pms.push(new AppHelperStripePaymentMethod(pm));
+          if (getPaymentProvider(pm.provider).capabilities.savedCard) pms.push(new SavedPaymentMethod(pm));
           if (pm.customerId && !customerId) customerId = pm.customerId;
         }
       }
       return { paymentMethods: pms, customerId, person: personResult || null, currency: gateways[0].currency || "usd", paymentGateways: gateways };
     },
     enabled: donationsEnabled,
-    // Payment methods are financial state — always refetch on mount so a deleted
-    // or detached card is never served stale from the persisted cache.
+    // Always refetch on mount — never serve stale financial state.
     staleTime: 0
   });
 
@@ -124,14 +121,6 @@ function DonatePageInner({ config }: Props) {
   const person = paymentData?.person ?? null;
   const pageCurrency = paymentData?.currency ?? "usd";
   const paymentGateways = paymentData?.paymentGateways ?? [];
-
-  // Derive the Stripe instance from the (serializable) gateway list. Keeping the
-  // Promise out of the react-query cache lets the IndexedDB persister serialize
-  // the cache — a Promise throws "could not be cloned" and breaks persistence.
-  const stripePromise = useMemo<Promise<Stripe> | null>(() => {
-    const pk = DonationHelper.findGatewayByProvider(paymentGateways, "stripe")?.publicKey;
-    return pk ? (loadStripe(pk) as Promise<Stripe>) : null;
-  }, [paymentGateways]);
 
   const { data: subscriptions = [] } = useQuery<SubscriptionRow[]>({
     queryKey: ["donate-subscriptions", customerId],
@@ -200,8 +189,8 @@ function DonatePageInner({ config }: Props) {
         <Box
           sx={{
             bgcolor: tc.surface,
+            border: `1px solid ${tc.border}`,
             borderRadius: `${mobileTheme.radius.xl}px`,
-            boxShadow: mobileTheme.shadows.sm,
             p: `${mobileTheme.spacing.lg}px`,
             textAlign: "center"
           }}
@@ -210,7 +199,7 @@ function DonatePageInner({ config }: Props) {
             sx={{
               width: 64,
               height: 64,
-              borderRadius: "32px",
+              borderRadius: "11px",
               bgcolor: tc.iconBackground,
               display: "inline-flex",
               alignItems: "center",
@@ -232,16 +221,14 @@ function DonatePageInner({ config }: Props) {
   }
 
   const renderOverview = () => {
-    const gradient = `linear-gradient(135deg, ${tc.primary} 0%, ${tc.secondary} 100%)`;
     return (
       <Box>
 
         <Box
           sx={{
             borderRadius: `${mobileTheme.radius.xl}px`,
-            boxShadow: mobileTheme.shadows.md,
             p: `${mobileTheme.spacing.lg}px`,
-            background: gradient,
+            background: mobileTheme.verseGradient,
             color: tc.onPrimary,
             textAlign: "center",
             mb: `${mobileTheme.spacing.lg}px`,
@@ -256,7 +243,7 @@ function DonatePageInner({ config }: Props) {
               <Typography sx={{ fontSize: 18, fontWeight: 600, opacity: 0.95, mb: 1 }}>
                 Your Giving Impact
               </Typography>
-              <Typography sx={{ fontSize: 36, fontWeight: 800, mb: 1 }}>
+              <Typography sx={{ fontSize: 36, fontWeight: 800, mb: 1, fontVariantNumeric: "tabular-nums" }}>
                 {CurrencyHelper.formatCurrencyWithLocale(givingStats.ytd || 0, pageCurrency)}
               </Typography>
               <Typography sx={{ fontSize: 14, opacity: 0.9 }}>
@@ -295,7 +282,7 @@ function DonatePageInner({ config }: Props) {
                 mb: `${mobileTheme.spacing.md}px`
               }}
             >
-              <Typography sx={{ fontSize: 20, fontWeight: 700, color: tc.text }}>
+              <Typography sx={{ fontSize: 11.5, fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase", color: tc.textSecondary }}>
                 Recent Activity
               </Typography>
               <Button
@@ -314,8 +301,8 @@ function DonatePageInner({ config }: Props) {
             <Box
               sx={{
                 bgcolor: tc.surface,
+                border: `1px solid ${tc.border}`,
                 borderRadius: `${mobileTheme.radius.lg}px`,
-                boxShadow: mobileTheme.shadows.sm,
                 p: `${mobileTheme.spacing.md}px`,
                 display: "flex",
                 alignItems: "center",
@@ -326,7 +313,7 @@ function DonatePageInner({ config }: Props) {
                 sx={{
                   width: 48,
                   height: 48,
-                  borderRadius: "24px",
+                  borderRadius: "11px",
                   bgcolor: tc.iconBackground,
                   display: "flex",
                   alignItems: "center",
@@ -381,8 +368,7 @@ function DonatePageInner({ config }: Props) {
           sx={{
             bgcolor: tc.surface,
             borderRadius: `${mobileTheme.radius.xl}px`,
-            boxShadow: mobileTheme.shadows.sm,
-            border: `1px solid ${tc.borderLight}`,
+            border: `1px solid ${tc.border}`,
             p: `${mobileTheme.spacing.lg}px`,
             textAlign: "center"
           }}
@@ -432,8 +418,8 @@ function DonatePageInner({ config }: Props) {
         <Box
           sx={{
             bgcolor: tc.surface,
+            border: `1px solid ${tc.border}`,
             borderRadius: `${mobileTheme.radius.lg}px`,
-            boxShadow: mobileTheme.shadows.sm,
             p: `${mobileTheme.spacing.md}px`
           }}
         >
@@ -458,8 +444,8 @@ function DonatePageInner({ config }: Props) {
       <Box
         sx={{
           bgcolor: tc.surface,
+          border: `1px solid ${tc.border}`,
           borderRadius: `${mobileTheme.radius.lg}px`,
-          boxShadow: mobileTheme.shadows.sm,
           p: `${mobileTheme.spacing.md}px`
         }}
       >
@@ -468,7 +454,6 @@ function DonatePageInner({ config }: Props) {
           customerId={customerId!}
           paymentMethods={paymentMethods || []}
           paymentGateways={paymentGateways}
-          stripePromise={stripePromise ?? undefined}
           donationSuccess={handleDataUpdate}
           church={church!}
           churchLogo={churchLogo}
@@ -489,8 +474,8 @@ function DonatePageInner({ config }: Props) {
       <Box
         sx={{
           bgcolor: tc.surface,
+          border: `1px solid ${tc.border}`,
           borderRadius: `${mobileTheme.radius.lg}px`,
-          boxShadow: mobileTheme.shadows.sm,
           p: `${mobileTheme.spacing.md}px`
         }}
       >
@@ -499,7 +484,6 @@ function DonatePageInner({ config }: Props) {
           customerId={customerId!}
           paymentMethods={paymentMethods || []}
           appName="B1App"
-          stripePromise={stripePromise ?? undefined}
           dataUpdate={handleDataUpdate}
         />
       </Box>
@@ -551,8 +535,8 @@ function DonatePageInner({ config }: Props) {
       <Box
         sx={{
           bgcolor: tc.surface,
+          border: `1px solid ${tc.border}`,
           borderRadius: `${mobileTheme.radius.xl}px`,
-          boxShadow: mobileTheme.shadows.md,
           p: `${mobileTheme.spacing.md}px`
         }}
       >
@@ -565,7 +549,7 @@ function DonatePageInner({ config }: Props) {
             gap: 1
           }}
         >
-          <Typography sx={{ fontSize: 20, fontWeight: 700, color: tc.text }}>{Locale.label("mobile.screens.giving")}</Typography>
+          <Typography sx={{ fontSize: 11.5, fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase", color: tc.textSecondary }}>{Locale.label("mobile.screens.giving")}</Typography>
           <Box sx={{ display: "flex", gap: 1, alignItems: "center" }}>
             <Button
               size="small"
@@ -608,7 +592,7 @@ function DonatePageInner({ config }: Props) {
           <Typography sx={{ color: tc.textMuted, textAlign: "center", py: 3 }}>{Locale.label("mobile.screens.loading")}</Typography>
         ) : (
           <Box sx={{ textAlign: "center", py: 1 }}>
-            <Typography sx={{ fontSize: 32, fontWeight: 800, color: tc.primary }}>
+            <Typography sx={{ fontSize: 32, fontWeight: 800, color: tc.primary, fontVariantNumeric: "tabular-nums" }}>
               {CurrencyHelper.formatCurrencyWithLocale(filteredTotal, pageCurrency)}
             </Typography>
             <Typography sx={{ fontSize: 14, color: tc.textMuted, fontWeight: 500 }}>
@@ -651,8 +635,8 @@ function DonatePageInner({ config }: Props) {
                   key={sub.id}
                   sx={{
                     bgcolor: tc.surface,
+                    border: `1px solid ${tc.border}`,
                     borderRadius: `${mobileTheme.radius.lg}px`,
-                    boxShadow: mobileTheme.shadows.sm,
                     p: `${mobileTheme.spacing.md}px`,
                     display: "flex",
                     alignItems: "center",
@@ -663,7 +647,7 @@ function DonatePageInner({ config }: Props) {
                     sx={{
                       width: 40,
                       height: 40,
-                      borderRadius: "20px",
+                      borderRadius: "11px",
                       bgcolor: tc.iconBackground,
                       display: "flex",
                       alignItems: "center",
@@ -715,8 +699,8 @@ function DonatePageInner({ config }: Props) {
         <Box
           sx={{
             bgcolor: tc.surface,
+            border: `1px solid ${tc.border}`,
             borderRadius: `${mobileTheme.radius.lg}px`,
-            boxShadow: mobileTheme.shadows.sm,
             overflow: "hidden"
           }}
         >
@@ -757,7 +741,7 @@ function DonatePageInner({ config }: Props) {
                     sx={{
                       width: 48,
                       height: 48,
-                      borderRadius: "24px",
+                      borderRadius: "11px",
                       bgcolor: tc.iconBackground,
                       display: "flex",
                       alignItems: "center",
@@ -782,7 +766,8 @@ function DonatePageInner({ config }: Props) {
                       fontSize: 16,
                       fontWeight: 700,
                       color: isPending ? tc.warning : tc.text,
-                      flexShrink: 0
+                      flexShrink: 0,
+                      fontVariantNumeric: "tabular-nums"
                     }}
                   >
                     {CurrencyHelper.formatCurrencyWithLocale(amount, (d as any).currency || pageCurrency)}

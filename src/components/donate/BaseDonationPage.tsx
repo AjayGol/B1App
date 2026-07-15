@@ -1,8 +1,7 @@
 "use client";
 
 import React from "react";
-import { loadStripe, Stripe } from "@stripe/stripe-js";
-import { RecurringDonations, StripePaymentMethod as AppHelperStripePaymentMethod, MultiGatewayDonationForm, DonationHelper, getPaymentProvider } from "@churchapps/apphelper/donations";
+import { RecurringDonations, SavedPaymentMethod, MultiGatewayDonationForm, getPaymentProvider } from "@churchapps/apphelper/donations";
 import type { PaymentGateway } from "@churchapps/apphelper/donations";
 import { PaymentMethods } from "@churchapps/apphelper/donations";
 import { DisplayBox } from "@churchapps/apphelper";
@@ -23,12 +22,11 @@ interface Props { personId: string, appName?: string, church?: ChurchInterface, 
 
 export const BaseDonationPage: React.FC<Props> = (props) => {
   const [donations, setDonations] = React.useState<DonationInterface[]>([]);
-  const [stripePromise, setStripe] = React.useState<Promise<Stripe>>(null);
-  const [appHelperPaymentMethods, setAppHelperPaymentMethods] = React.useState<AppHelperStripePaymentMethod[]>(null);
+  const [appHelperPaymentMethods, setAppHelperPaymentMethods] = React.useState<SavedPaymentMethod[]>([]);
   const [paymentGateways, setPaymentGateways] = React.useState<PaymentGateway[]>([]);
-  const [customerId, setCustomerId] = React.useState(null);
-  const [person, setPerson] = React.useState<PersonInterface>(null);
-  const [message, setMessage] = React.useState<string>(null);
+  const [customerId, setCustomerId] = React.useState<string | null>(null);
+  const [person, setPerson] = React.useState<PersonInterface | null>(null);
+  const [message, setMessage] = React.useState<string>("");
   const [appName, setAppName] = React.useState<string>("");
   const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
   const [isLoading, setIsLoading] = React.useState<boolean>(true);
@@ -52,10 +50,6 @@ export const BaseDonationPage: React.FC<Props> = (props) => {
         if (!isMounted()) return;
         if (data.length) {
           setPaymentGateways(data);
-          const stripeGateway = DonationHelper.findGatewayByProvider(data, "stripe");
-          if (stripeGateway?.publicKey) {
-            setStripe(loadStripe(stripeGateway.publicKey));
-          }
           ApiHelper.get("/paymentmethods/personid/" + props.personId, "GivingApi").then((results: { provider?: string; customerId?: string }[]) => {
             if (!isMounted()) {
               return;
@@ -63,10 +57,10 @@ export const BaseDonationPage: React.FC<Props> = (props) => {
             if (!Array.isArray(results) || results.length === 0) {
               setAppHelperPaymentMethods([]);
             } else {
-              const appHelperMethods: AppHelperStripePaymentMethod[] = [];
+              const appHelperMethods: SavedPaymentMethod[] = [];
               for (const pm of results) {
                 if (getPaymentProvider(pm.provider).capabilities.savedCard) {
-                  appHelperMethods.push(new AppHelperStripePaymentMethod(pm));
+                  appHelperMethods.push(new SavedPaymentMethod(pm));
                 }
                 // Extract customer ID from first payment method if we don't have one
                 if (pm.customerId && !customerId) {
@@ -95,7 +89,7 @@ export const BaseDonationPage: React.FC<Props> = (props) => {
   };
 
   const handleDataUpdate = (message?: string) => {
-    setMessage(message);
+    setMessage(message || "");
     // Add a small delay to allow backend to process the donation
     setTimeout(() => {
       loadData();
@@ -168,8 +162,8 @@ export const BaseDonationPage: React.FC<Props> = (props) => {
           {appName !== "B1App" && <TableCell><Link href={"/donations/" + d.batchId}>{d.batchId}</Link></TableCell>}
           <TableCell>{DateHelper.prettyDate(DateHelper.toDate(d.donationDate))}</TableCell>
           <TableCell>{d.method} - {d.methodDetails}</TableCell>
-          <TableCell>{d.fund.name}{isPending && " (" + Locale.label("donate.pending") + ")"}</TableCell>
-          <TableCell sx={{ color: isPending ? "warning.main" : undefined }}>{CurrencyHelper.formatCurrencyWithLocale(d.fund.amount, d.currency || "usd")}</TableCell>
+          <TableCell>{d.fund?.name}{isPending && " (" + Locale.label("donate.pending") + ")"}</TableCell>
+          <TableCell sx={{ color: isPending ? "warning.main" : undefined }}>{CurrencyHelper.formatCurrencyWithLocale(d.fund?.amount || 0, d.currency || "usd")}</TableCell>
         </TableRow>
       );
     }
@@ -214,11 +208,10 @@ export const BaseDonationPage: React.FC<Props> = (props) => {
     <>
       {message && <Alert severity="success">{message}</Alert>}
       <MultiGatewayDonationForm
-        person={person}
-        customerId={customerId}
+        person={person!}
+        customerId={customerId || ""}
         paymentMethods={appHelperPaymentMethods || []}
         paymentGateways={paymentGateways}
-        stripePromise={stripePromise}
         donationSuccess={handleDataUpdate}
         church={props?.church}
         churchLogo={props?.churchLogo}
@@ -226,8 +219,8 @@ export const BaseDonationPage: React.FC<Props> = (props) => {
       <DisplayBox headerIcon="payments" headerText={Locale.label("donate.donations")} editContent={getEditContent()} data-testid="donations-display-box">
         {getTable()}
       </DisplayBox>
-      <RecurringDonations customerId={customerId} paymentMethods={appHelperPaymentMethods || []} appName={appName} dataUpdate={handleDataUpdate} data-testid="recurring-donations" />
-      <PaymentMethods person={person} customerId={customerId} paymentMethods={appHelperPaymentMethods || []} appName={appName} stripePromise={stripePromise} dataUpdate={handleDataUpdate} data-testid="payment-methods" />
+      <RecurringDonations customerId={customerId || ""} paymentMethods={appHelperPaymentMethods || []} appName={appName} dataUpdate={handleDataUpdate} data-testid="recurring-donations" />
+      <PaymentMethods person={person!} customerId={customerId || ""} paymentMethods={appHelperPaymentMethods || []} appName={appName} dataUpdate={handleDataUpdate} data-testid="payment-methods" />
     </>
   );
 };

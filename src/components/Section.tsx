@@ -3,7 +3,7 @@
 import React, { CSSProperties, useState } from "react";
 import { ElementInterface, SectionInterface } from "@/helpers";
 import { Box, Container } from "@mui/material";
-import { DraggableWrapper, DroppableArea } from "@churchapps/apphelper/website";
+import { DraggableWrapper, DroppableArea, SectionDivider, parseDividerConfig } from "@churchapps/apphelper/website";
 import { Element } from "./Element";
 import { YoutubeBackground } from "./YoutubeBackground";
 import { ApiHelper } from "@churchapps/apphelper";
@@ -17,18 +17,27 @@ interface Props {
   section: SectionInterface,
   church?: ChurchInterface;
   churchSettings: AppearanceInterface;
-  onEdit?: (section: SectionInterface, element: ElementInterface) => void;
+  onEdit?: (section: SectionInterface | null, element: ElementInterface | null) => void;
   onMove?: () => void;
 }
 
 export const Section: React.FC<Props> = props => {
   const [isDragging, setIsDragging] = useState(false);
 
+  const getAnswers = (): Record<string, any> => {
+    if (props.section.answers) return props.section.answers as Record<string, any>;
+    if (props.section.answersJSON) { try { return JSON.parse(props.section.answersJSON); } catch { return {}; } }
+    return {};
+  };
+  const answers = getAnswers();
+  const dividerTop = parseDividerConfig(answers.dividerTop);
+  const dividerBottom = parseDividerConfig(answers.dividerBottom);
+  const hasDivider = !!(dividerTop || dividerBottom);
 
   const getElements = () => {
     const result: React.ReactElement[] = [];
     props.section?.elements?.forEach(e => {
-      const textColor = StyleHelper.getTextColor(props.section?.textColor, {}, props.churchSettings);
+      const textColor = StyleHelper.getTextColor(props.section?.textColor || "", {}, props.churchSettings);
       result.push(<Element key={e.id} element={e} onEdit={props.onEdit} onMove={props.onMove} church={props.church} churchSettings={props.churchSettings} textColor={textColor} />);
     });
     return result;
@@ -73,6 +82,7 @@ export const Section: React.FC<Props> = props => {
     if (props.section.textColor === "light") result += " sectionDark";
     if (props.first) result += " sectionFirst";
     if (props.onEdit) result += " sectionWrapper";
+    if (hasDivider) result += " sectionWithDivider";
     result += getVisibilityClasses();
 
     let hc = props.section.headingColor;
@@ -100,13 +110,13 @@ export const Section: React.FC<Props> = props => {
       const element: ElementInterface = data.data;
       element.sort = sort;
       element.sectionId = props.section.id;
-      ApiHelper.post("/elements", [element], "ContentApi").then(() => { props.onMove(); });
+      ApiHelper.post("/elements", [element], "ContentApi").then(() => { props.onMove?.(); });
     } else {
       const element: ElementInterface = { sectionId: props.section.id, elementType: data.elementType, sort, blockId: props.section.blockId };
       if (data.blockId) element.answersJSON = JSON.stringify({ targetBlockId: data.blockId });
       else if (data.elementType === "row") element.answersJSON = JSON.stringify({ columns: "6,6" });
       else if (data.elementType === "box") element.answersJSON = JSON.stringify({ background: "var(--light)", text: "var(--dark)" });
-      props.onEdit(null, element);
+      props.onEdit?.(null, element);
     }
   };
 
@@ -137,11 +147,11 @@ export const Section: React.FC<Props> = props => {
   if (sectionBg && sectionBg.indexOf("youtube:") > -1) {
     const youtubeId = sectionBg.split(":")[1];
     result = (<>{getSectionAnchor()}<YoutubeBackground isDragging={isDragging} id={getId()} videoId={youtubeId} overlay="rgba(0,0,0,.4)" contentClassName={getVideoClassName()}>{contents}</YoutubeBackground></>);
-  } else result = (<>{getSectionAnchor()}<Box component="div" sx={{ ":before": { opacity: (props.section.answers?.backgroundOpacity) ? props.section.answers.backgroundOpacity + " !important" : "", background: props.section.answers?.overlayColor ? props.section.answers.overlayColor + " !important" : "" } }} style={getStyle()} className={getClassName()} id={getId()}>{contents}</Box></>);
+  } else result = (<>{getSectionAnchor()}<Box component="div" sx={{ ":before": { opacity: (props.section.answers?.backgroundOpacity) ? props.section.answers.backgroundOpacity + " !important" : "", background: props.section.answers?.overlayColor ? props.section.answers.overlayColor + " !important" : "" } }} style={getStyle()} className={getClassName()} id={getId()}>{dividerTop && <SectionDivider position="top" {...dividerTop} />}{dividerBottom && <SectionDivider position="bottom" {...dividerBottom} />}{contents}</Box></>);
 
   if (props.onEdit) {
     return (
-      <DraggableWrapper dndType="section" elementType="section" data={props.section} onDoubleClick={() => props.onEdit(props.section, null)}>
+      <DraggableWrapper dndType="section" elementType="section" data={props.section} onDoubleClick={() => props.onEdit?.(props.section, null)}>
         {result}
       </DraggableWrapper>
     );

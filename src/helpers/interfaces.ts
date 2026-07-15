@@ -54,8 +54,24 @@ export interface PageInterface {
   url?: string;
   title?: string;
   layout?: string;
+  metaDescription?: string;
 
   sections?: SectionInterface[];
+}
+
+export interface PostInterface {
+  id?: string;
+  churchId?: string;
+  title?: string;
+  slug?: string;
+  excerpt?: string;
+  content?: string;
+  authorId?: string;
+  authorName?: string;
+  photoUrl?: string;
+  publishDate?: string;
+  category?: string;
+  tags?: string;
 }
 
 export interface BlockInterface {

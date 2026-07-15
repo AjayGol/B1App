@@ -80,7 +80,6 @@ export function Services({ selectedHandler }: Props) {
 
   return (
     <>
-      {/* Header Section */}
       <HeaderSection>
         <HeaderIconContainer>
           <Icon sx={{ fontSize: 48, color: colors.primary }}>event</Icon>
@@ -93,7 +92,6 @@ export function Services({ selectedHandler }: Props) {
         </Typography>
       </HeaderSection>
 
-      {/* Services List */}
       {services.length === 0
         ? (
           <EmptyStateCard>
@@ -112,7 +110,7 @@ export function Services({ selectedHandler }: Props) {
             return (
               <CheckinCard key={service.id}>
                 <CardActionArea
-                  onClick={() => selectService(service.id)}
+                  onClick={() => selectService(service.id || "")}
                   data-testid={`select-service-${service.id}-button`}
                   sx={{ padding: 2, minHeight: 72 }}
                 >

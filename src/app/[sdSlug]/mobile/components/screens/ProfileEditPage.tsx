@@ -338,10 +338,7 @@ export const ProfileEditPage = ({ config }: Props) => {
 
       await ApiHelper.post("/tasks?type=directoryUpdate", [task], "DoingApi");
 
-      // The directoryUpdate handler uploads the photo to FileStorage at submit
-      // time (before approval), so the canonical image URL already serves the
-      // new bytes. Refresh the local person record so the drawer/avatar pick
-      // up the new photo without requiring a full sign-out.
+      // Photo uploads on submit, so refresh to show new image without sign-out.
       if (id) {
         try {
           const fresh = await ApiHelper.get("/people/" + id, "MembershipApi");
@@ -589,7 +586,7 @@ export const ProfileEditPage = ({ config }: Props) => {
         variant="outlined"
         size="medium"
         fullWidth
-        sx={{ ...inputSx, ...modifiedOutlineSx(key) }}
+        sx={{ ...inputSx, ...modifiedOutlineSx(key) } as any}
         InputLabelProps={opts?.type === "date" ? { shrink: true } : undefined}
       />
       {modifiedDot(key)}
@@ -602,8 +599,8 @@ export const ProfileEditPage = ({ config }: Props) => {
       <Box
         sx={{
           bgcolor: tc.surface,
+          border: `1px solid ${tc.border}`,
           borderRadius: `${mobileTheme.radius.lg}px`,
-          boxShadow: mobileTheme.shadows.sm,
           p: `${mobileTheme.spacing.md}px`,
           display: "flex",
           alignItems: "center",
@@ -654,8 +651,8 @@ export const ProfileEditPage = ({ config }: Props) => {
       <Box
         sx={{
           bgcolor: tc.surface,
+          border: `1px solid ${tc.border}`,
           borderRadius: `${mobileTheme.radius.lg}px`,
-          boxShadow: mobileTheme.shadows.sm,
           p: `${mobileTheme.spacing.md}px`,
           mt: `${mobileTheme.spacing.md}px`
         }}
@@ -671,8 +668,8 @@ export const ProfileEditPage = ({ config }: Props) => {
       <Box
         sx={{
           bgcolor: tc.surface,
+          border: `1px solid ${tc.border}`,
           borderRadius: `${mobileTheme.radius.lg}px`,
-          boxShadow: mobileTheme.shadows.sm,
           p: `${mobileTheme.spacing.md}px`,
           mt: `${mobileTheme.spacing.md}px`
         }}
@@ -687,8 +684,8 @@ export const ProfileEditPage = ({ config }: Props) => {
       <Box
         sx={{
           bgcolor: tc.surface,
+          border: `1px solid ${tc.border}`,
           borderRadius: `${mobileTheme.radius.lg}px`,
-          boxShadow: mobileTheme.shadows.sm,
           p: `${mobileTheme.spacing.md}px`,
           mt: `${mobileTheme.spacing.md}px`
         }}
@@ -708,8 +705,8 @@ export const ProfileEditPage = ({ config }: Props) => {
       <Box
         sx={{
           bgcolor: tc.surface,
+          border: `1px solid ${tc.border}`,
           borderRadius: `${mobileTheme.radius.lg}px`,
-          boxShadow: mobileTheme.shadows.sm,
           p: `${mobileTheme.spacing.md}px`,
           mt: `${mobileTheme.spacing.md}px`
         }}
@@ -731,8 +728,8 @@ export const ProfileEditPage = ({ config }: Props) => {
       <Box
         sx={{
           bgcolor: tc.surface,
+          border: `1px solid ${tc.border}`,
           borderRadius: `${mobileTheme.radius.lg}px`,
-          boxShadow: mobileTheme.shadows.sm,
           p: `${mobileTheme.spacing.md}px`
         }}
       >
@@ -801,8 +798,8 @@ export const ProfileEditPage = ({ config }: Props) => {
       <Box
         sx={{
           bgcolor: tc.surface,
+          border: `1px solid ${tc.border}`,
           borderRadius: `${mobileTheme.radius.lg}px`,
-          boxShadow: mobileTheme.shadows.sm,
           p: `${mobileTheme.spacing.md}px`,
           mt: `${mobileTheme.spacing.md}px`
         }}
@@ -884,8 +881,8 @@ export const ProfileEditPage = ({ config }: Props) => {
       <Box
         sx={{
           bgcolor: tc.surface,
+          border: `1px solid ${tc.border}`,
           borderRadius: `${mobileTheme.radius.lg}px`,
-          boxShadow: mobileTheme.shadows.sm,
           p: `${mobileTheme.spacing.md}px`
         }}
       >
@@ -935,8 +932,8 @@ export const ProfileEditPage = ({ config }: Props) => {
       <Box
         sx={{
           bgcolor: tc.surface,
+          border: `1px solid ${tc.border}`,
           borderRadius: `${mobileTheme.radius.lg}px`,
-          boxShadow: mobileTheme.shadows.sm,
           p: `${mobileTheme.spacing.md}px`,
           mt: `${mobileTheme.spacing.md}px`
         }}
@@ -981,8 +978,8 @@ export const ProfileEditPage = ({ config }: Props) => {
       <Box
         sx={{
           bgcolor: tc.surface,
+          border: `1px solid ${tc.border}`,
           borderRadius: `${mobileTheme.radius.lg}px`,
-          boxShadow: mobileTheme.shadows.sm,
           p: `${mobileTheme.spacing.md}px`,
           mt: `${mobileTheme.spacing.md}px`
         }}
@@ -1066,8 +1063,8 @@ export const ProfileEditPage = ({ config }: Props) => {
       <Box
         sx={{
           bgcolor: tc.surface,
+          border: `1px solid ${tc.border}`,
           borderRadius: `${mobileTheme.radius.lg}px`,
-          boxShadow: mobileTheme.shadows.sm,
           p: `${mobileTheme.spacing.md}px`
         }}
       >
@@ -1165,8 +1162,8 @@ export const ProfileEditPage = ({ config }: Props) => {
       <Box
         sx={{
           bgcolor: tc.surface,
+          border: `1px solid ${tc.border}`,
           borderRadius: `${mobileTheme.radius.lg}px`,
-          boxShadow: mobileTheme.shadows.sm,
           overflow: "hidden",
           mb: `${mobileTheme.spacing.md}px`
         }}

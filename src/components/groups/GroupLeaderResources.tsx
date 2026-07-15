@@ -19,11 +19,11 @@ interface Props {
 
 export const GroupLeaderResources: React.FC<Props> = (props) => {
   const [pendingFileSave, setPendingFileSave] = useState(false);
-  const [files, setFiles] = useState<FileInterface[]>(null);
-  const [links, setLinks] = useState<LinkInterface[]>(null);
+  const [files, setFiles] = useState<FileInterface[] | null>(null);
+  const [links, setLinks] = useState<LinkInterface[] | null>(null);
 
   let usedSpace = 0;
-  files?.forEach((f) => (usedSpace += f.size));
+  files?.forEach((f) => (usedSpace += f.size || 0));
 
   const handleCallback = () => {
     setPendingFileSave(false);
@@ -49,14 +49,14 @@ export const GroupLeaderResources: React.FC<Props> = (props) => {
   };
 
   const handleDelete = async (file: FileInterface) => {
-    if (confirm(Locale.label("groups.confirmDelete").replace("{}", file.fileName))) {
+    if (confirm(Locale.label("groups.confirmDelete").replace("{}", file.fileName || ""))) {
       await ApiHelper.delete("/files/" + file.id, "ContentApi");
       loadData();
     }
   };
 
   const handleLinkDelete = async (link: LinkInterface) => {
-    if (confirm(Locale.label("groups.confirmDelete").replace("{}", link.text))) {
+    if (confirm(Locale.label("groups.confirmDelete").replace("{}", link.text || ""))) {
       await ApiHelper.delete("/links/" + link.id, "ContentApi");
       loadData();
     }
@@ -95,11 +95,11 @@ export const GroupLeaderResources: React.FC<Props> = (props) => {
   const fileRows = files?.map((file) => (
     <TableRow key={file.id}>
       <TableCell>
-        <Link href={file.contentPath} target="_blank" rel="noopener noreferrer" data-testid={`leader-resource-file-${file.id}-link`}>
+        <Link href={file.contentPath || ""} target="_blank" rel="noopener noreferrer" data-testid={`leader-resource-file-${file.id}-link`}>
           {file.fileName}
         </Link>
       </TableCell>
-      <TableCell>{formatSize(file.size)}</TableCell>
+      <TableCell>{formatSize(file.size || 0)}</TableCell>
       <TableCell align="right">
         <SmallButton
           icon="delete"
@@ -115,7 +115,7 @@ export const GroupLeaderResources: React.FC<Props> = (props) => {
   const linkRows = links?.map((link) => (
     <TableRow key={link.id}>
       <TableCell>
-        <Link href={link.url} target="_blank" rel="noopener noreferrer" data-testid={`leader-resource-link-${link.id}-link`}>
+        <Link href={link.url || ""} target="_blank" rel="noopener noreferrer" data-testid={`leader-resource-link-${link.id}-link`}>
           {link.text}
         </Link>
       </TableCell>
@@ -169,14 +169,12 @@ export const GroupLeaderResources: React.FC<Props> = (props) => {
         )}
       </DisplayBox>
 
-      {/* Link Add */}
       <GroupLinkAdd
         saveCallback={() => { loadData(); }}
         groupId={props.groupId}
         forGroupLeader
       />
 
-      {/* File Upload */}
       <InputBox headerIcon="description" headerText={Locale.label("groups.upload")} saveFunction={handleSave} saveText={Locale.label("groups.upload")} data-testid="group-leader-upload-inputbox">
         {getStorage()}
         <p>{Locale.label("groups.storageInfo")}</p>

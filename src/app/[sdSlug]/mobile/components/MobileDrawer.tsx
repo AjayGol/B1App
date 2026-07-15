@@ -13,6 +13,7 @@ import { type LinkInterface } from "@churchapps/helpers";
 import { Locale, PersonHelper, UserHelper } from "@churchapps/apphelper";
 import { Permissions } from "@churchapps/helpers";
 import { EnvironmentHelper } from "@/helpers";
+import { WebPushHelperBase } from "@/helpers/WebPushHelperBase";
 import UserContext from "@/context/UserContext";
 import { mobileTheme, linkTypeToIcon, linkTypeToRoute } from "./mobileTheme";
 import { getInitials } from "./util";
@@ -35,6 +36,9 @@ export const MobileDrawer = ({ links, onNavigate }: Props) => {
   const lastName = context?.person?.name?.last || context?.user?.lastName || "";
   const initials = getInitials({ name: { first: firstName, last: lastName } });
   const canAccessAdmin = UserHelper.currentUserChurch && UserHelper.checkAccess(Permissions.contentApi.content.edit);
+
+  const [showInstall, setShowInstall] = React.useState(false);
+  React.useEffect(() => { setShowInstall(!WebPushHelperBase.isStandalone()); }, []);
 
   const adminUrl = React.useMemo(() => {
     if (!canAccessAdmin || !context?.userChurch?.jwt || !context?.userChurch?.church?.id) return "";
@@ -109,6 +113,29 @@ export const MobileDrawer = ({ links, onNavigate }: Props) => {
       </Box>
 
       <Box sx={{ flex: 1, overflowY: "auto" }}>
+        {context?.user && (
+          <Link href="/mobile/me" style={{ textDecoration: "none", color: "inherit" }} onClick={onNavigate}>
+            <Box sx={{
+              display: "flex",
+              alignItems: "center",
+              gap: 1.5,
+              minHeight: 48,
+              px: `${mobileTheme.spacing.md}px`,
+              py: `${mobileTheme.spacing.sm + 4}px`,
+              mx: "8px",
+              mb: "2px",
+              borderRadius: `${mobileTheme.radius.md}px`,
+              bgcolor: isActive("/mobile/me") ? tc.primaryLight : "transparent",
+              cursor: "pointer",
+              "&:hover": { bgcolor: isActive("/mobile/me") ? tc.primaryLight : tc.iconBackground }
+            }}>
+              <Icon sx={{ fontSize: 24, color: tc.primary }}>person</Icon>
+              <Typography sx={{ fontSize: 16, fontWeight: 500, color: isActive("/mobile/me") ? tc.primary : tc.text, flex: 1 }}>
+                {Locale.label("mobile.me.title")}
+              </Typography>
+            </Box>
+          </Link>
+        )}
         {canAccessAdmin && (
           <Box
             component="a"
@@ -121,7 +148,9 @@ export const MobileDrawer = ({ links, onNavigate }: Props) => {
               minHeight: 48,
               px: `${mobileTheme.spacing.md}px`,
               py: `${mobileTheme.spacing.sm + 4}px`,
-              borderBottom: `1px solid ${tc.border}`,
+              mx: "8px",
+              mb: "2px",
+              borderRadius: `${mobileTheme.radius.md}px`,
               color: "inherit",
               textDecoration: "none",
               cursor: "pointer",
@@ -162,16 +191,18 @@ export const MobileDrawer = ({ links, onNavigate }: Props) => {
               minHeight: 48,
               px: `${mobileTheme.spacing.md}px`,
               py: `${mobileTheme.spacing.sm + 4}px`,
-              borderBottom: `1px solid ${tc.border}`,
-              bgcolor: active ? tc.primary : "transparent",
+              mx: "8px",
+              mb: "2px",
+              borderRadius: `${mobileTheme.radius.md}px`,
+              bgcolor: active ? tc.primaryLight : "transparent",
               cursor: "pointer",
-              "&:hover": { bgcolor: active ? tc.primary : tc.iconBackground }
+              "&:hover": { bgcolor: active ? tc.primaryLight : tc.iconBackground }
             }}>
-              <Icon sx={{ fontSize: 24, color: active ? tc.onPrimary : tc.primary }}>{iconName}</Icon>
+              <Icon sx={{ fontSize: 24, color: tc.primary }}>{iconName}</Icon>
               <Typography sx={{
                 fontSize: 16,
                 fontWeight: active ? 600 : 500,
-                color: active ? tc.onPrimary : tc.text,
+                color: active ? tc.primary : tc.text,
                 flex: 1,
                 minWidth: 0,
                 whiteSpace: "nowrap",
@@ -196,6 +227,29 @@ export const MobileDrawer = ({ links, onNavigate }: Props) => {
             </Link>
           );
         })}
+        {showInstall && (
+          <Link href="/mobile/install" style={{ textDecoration: "none", color: "inherit" }} onClick={onNavigate}>
+            <Box sx={{
+              display: "flex",
+              alignItems: "center",
+              gap: 1.5,
+              minHeight: 48,
+              px: `${mobileTheme.spacing.md}px`,
+              py: `${mobileTheme.spacing.sm + 4}px`,
+              mx: "8px",
+              mb: "2px",
+              borderRadius: `${mobileTheme.radius.md}px`,
+              bgcolor: isActive("/mobile/install") ? tc.primaryLight : "transparent",
+              cursor: "pointer",
+              "&:hover": { bgcolor: isActive("/mobile/install") ? tc.primaryLight : tc.iconBackground }
+            }}>
+              <Icon sx={{ fontSize: 24, color: tc.primary }}>install_mobile</Icon>
+              <Typography sx={{ fontSize: 16, fontWeight: 500, color: isActive("/mobile/install") ? tc.primary : tc.text, flex: 1 }}>
+                {Locale.label("mobile.screenTitles.installApp")}
+              </Typography>
+            </Box>
+          </Link>
+        )}
       </Box>
 
       <Box sx={{

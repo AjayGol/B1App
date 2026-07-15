@@ -77,7 +77,7 @@ export default function PrintPage({ params }: { params: Params }) {
     fundDonations.forEach((d) => {
       const donation = ArrayHelper.getOne(donations, "id", d.donationId);
       if (donation) {
-        result += d.amount;
+        result += d.amount || 0;
       }
     });
     return CurrencyHelper.formatCurrencyWithLocale(result, currency);
@@ -90,7 +90,7 @@ export default function PrintPage({ params }: { params: Params }) {
       const donation = ArrayHelper.getOne(donations, "id", fd.donationId);
       if (donation) {
 
-        result.push({ fund: fund?.name, amount: fd.amount });
+        result.push({ fund: fund?.name || "", amount: fd.amount || 0 });
       }
     });
     return result;
@@ -106,7 +106,7 @@ export default function PrintPage({ params }: { params: Params }) {
           <td style={{ borderBottom: "2px solid var(--print-accent)", borderRight: "2px solid var(--print-accent)", borderCollapse: "collapse", textAlign: "left", width: "20%", paddingLeft: "5px" }}>{DateHelper.prettyDate(donation?.donationDate).toString()}</td>
           <td style={{ borderBottom: "2px solid var(--print-accent)", borderRight: "2px solid var(--print-accent)", borderCollapse: "collapse", textAlign: "left", width: "15%", paddingLeft: "5px" }}>{donation?.method}</td>
           <td style={{ borderBottom: "2px solid var(--print-accent)", borderRight: "2px solid var(--print-accent)", borderCollapse: "collapse", textAlign: "left", width: "45%", paddingLeft: "5px" }}>{fund?.name}</td>
-          <td style={{ borderBottom: "2px solid var(--print-accent)", borderLeft: "2px solid var(--print-accent)", borderCollapse: "collapse", textAlign: "right", width: "20%", paddingRight: "5px" }}>{CurrencyHelper.formatCurrencyWithLocale(fd.amount, donation?.currency || currency)}</td>
+          <td style={{ borderBottom: "2px solid var(--print-accent)", borderLeft: "2px solid var(--print-accent)", borderCollapse: "collapse", textAlign: "right", width: "20%", paddingRight: "5px" }}>{CurrencyHelper.formatCurrencyWithLocale(fd.amount || 0, donation?.currency || currency)}</td>
         </tr>);
       }
     });
@@ -150,20 +150,18 @@ export default function PrintPage({ params }: { params: Params }) {
         <div style={{ margin: "0px", padding: "0px", borderTop: "2px solid var(--print-accent)", width: "80%" }}></div>
 
         <div style={{ display: "flex" }}>
-          {/* Donor */}
           <div style={{ width: "50%" }}>
-            <h1>{context.person?.name?.display}</h1>
-            <p>{context.person?.contactInfo?.address1}</p>
-            <p>{context.person?.contactInfo?.address2}</p>
-            <p>{context.person?.contactInfo?.mobilePhone}</p>
-            <p>{context.person?.contactInfo?.email}</p>
+            <h1>{context?.person?.name?.display}</h1>
+            <p>{context?.person?.contactInfo?.address1}</p>
+            <p>{context?.person?.contactInfo?.address2}</p>
+            <p>{context?.person?.contactInfo?.mobilePhone}</p>
+            <p>{context?.person?.contactInfo?.email}</p>
           </div>
-          {/* Church */}
           <div style={{ width: "50%" }}>
-            <h1>{context.userChurch?.church?.name}</h1>
-            <p>{context.userChurch?.church?.address1}</p>
-            <p>{context.userChurch?.church?.address2}</p>
-            <p>{context.userChurch?.church?.city}, {context.userChurch?.church?.country}, {context.userChurch?.church?.zip}</p>
+            <h1>{context?.userChurch?.church?.name}</h1>
+            <p>{context?.userChurch?.church?.address1}</p>
+            <p>{context?.userChurch?.church?.address2}</p>
+            <p>{context?.userChurch?.church?.city}, {context?.userChurch?.church?.country}, {context?.userChurch?.church?.zip}</p>
           </div>
         </div>
         <div style={{ margin: "0px", padding: "0px", borderTop: "2px solid var(--print-accent)", width: "80%" }}></div>
@@ -177,7 +175,6 @@ export default function PrintPage({ params }: { params: Params }) {
             </div>
             <div style={{ width: "50%" }}>
               <h2>Funds:</h2>
-              {/* Table Start */}
               <table style={{ width: "100%", borderCollapse: "collapse" }}>
                 <thead style={{ height: "24px" }}>
                   <tr>
@@ -189,14 +186,12 @@ export default function PrintPage({ params }: { params: Params }) {
                   {tableFundTotal()}
                 </tbody>
               </table>
-              {/* Table End */}
             </div>
           </div>
         </div>
 
         <div>
           <h1>Contribution Details:</h1>
-          {/* Table Start */}
           <table style={{ width: "100%", borderCollapse: "collapse" }}>
             <thead style={{ height: "28px" }}>
               <tr>
@@ -216,7 +211,6 @@ export default function PrintPage({ params }: { params: Params }) {
               </tr>
             </tbody>
           </table>
-          {/* Table End */}
         </div>
 
       </div>

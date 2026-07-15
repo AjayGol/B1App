@@ -1,9 +1,6 @@
 "use client";
 
-// Relocated from @churchapps/apphelper (removed in 0.8.0, where B1App is its only
-// consumer). The note/store primitives it builds on (Note, AddNote,
-// SubscriptionToggle, ConversationStore, SubscriptionManager, Loading) remain in
-// apphelper and are imported from its barrel.
+// Relocated from apphelper 0.8.0; primitives (Note, AddNote, SubscriptionToggle, ConversationStore, SubscriptionManager, Loading) remain in apphelper.
 
 import React from "react";
 import { Box, Paper } from "@mui/material";
@@ -94,7 +91,7 @@ export function Conversations(props: Props) {
       if (churchId) await SubscriptionManager.joinRoom(created.id, churchId, personId);
       setConversation({ ...created, messages: [] });
     }
-    return created?.id;
+    return created?.id ?? "";
   };
 
   if (!hydrated) return <Loading />;
@@ -103,7 +100,7 @@ export function Conversations(props: Props) {
   const messages = filterVisibleMessages(allMessages);
 
   const getNotes = () => messages.map((m) => (
-    <Note key={m.id} message={m} context={props.context} showEditNote={(id: string) => setEditMessageId(id)} />
+    <Note key={m.id} message={m} context={props.context} showEditNote={(id?: string) => setEditMessageId(id ?? null)} />
   ));
 
   const result = (

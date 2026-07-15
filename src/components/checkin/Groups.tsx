@@ -16,7 +16,7 @@ interface Props {
 }
 
 export function Groups({ selectedHandler }: Props) {
-  const [selectedCategory, setSelectedCategory] = useState<GroupCategoryInterface>(null);
+  const [selectedCategory, setSelectedCategory] = useState<GroupCategoryInterface | null>(null);
   const [groupTree, setGroupTree] = useState<GroupCategoryInterface[]>([]);
 
   const buildTree = () => {
@@ -116,7 +116,6 @@ export function Groups({ selectedHandler }: Props) {
 
   return (
     <>
-      {/* Header Section */}
       <HeaderSection>
         <HeaderIconContainer>
           <Icon sx={{ fontSize: 48, color: colors.primary }}>groups</Icon>
@@ -129,7 +128,6 @@ export function Groups({ selectedHandler }: Props) {
         </Typography>
       </HeaderSection>
 
-      {/* Groups List */}
       {groupTree && groupTree.length > 0
         ? (
           getCategories()
@@ -146,7 +144,6 @@ export function Groups({ selectedHandler }: Props) {
           </EmptyStateCard>
         )}
 
-      {/* Bottom Action */}
       <Box sx={{ marginTop: 3 }}>
         <Button
           variant="outlined"
