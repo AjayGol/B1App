@@ -1,7 +1,19 @@
 "use client";
 import { useState, useEffect, useMemo } from "react";
-import { getProvider, navigateToPath, type Instructions } from "@churchapps/content-providers";
+import { getProvider, navigateToPath, type Instructions, type InstructionItem } from "@churchapps/content-providers";
 import { ApiHelper } from "@churchapps/apphelper";
+
+// Index paths go stale when the provider edits content; relatedId doesn't.
+function findByRelatedId(items: InstructionItem[], relatedId: string): InstructionItem | null {
+  for (const item of items) {
+    if (item.relatedId === relatedId || item.id === relatedId) return item;
+    if (item.children) {
+      const found = findByRelatedId(item.children, relatedId);
+      if (found) return found;
+    }
+  }
+  return null;
+}
 
 export interface ProviderContentChild {
   id?: string;
@@ -10,12 +22,12 @@ export interface ProviderContentChild {
   seconds?: number;
   downloadUrl?: string;
   thumbnailUrl?: string;
-  mediaType?: "video" | "image";
+  mediaType?: "video" | "image" | "audio";
 }
 
 export interface ProviderContent {
   url?: string;
-  mediaType?: "video" | "image" | "text" | "iframe";
+  mediaType?: "video" | "image" | "audio" | "text" | "iframe";
   description?: string;
   label?: string;
   children?: ProviderContentChild[];
@@ -31,15 +43,19 @@ export interface UseProviderContentParams {
   providerId?: string;
   providerPath?: string;
   providerContentPath?: string;
+  /** Stable content id; preferred over the index-based providerContentPath */
+  relatedId?: string;
   fallbackUrl?: string;
 }
 
 // Fallback media-type detection for URLs whose source didn't supply an explicit type.
-function detectMediaType(url: string): "video" | "image" | "iframe" {
+function detectMediaType(url: string): "video" | "image" | "audio" | "iframe" {
   const lowerUrl = url.toLowerCase();
+  const audioExtensions = [".mp3", ".m4a", ".aac", ".wav", ".flac", ".oga"];
   const videoExtensions = [".mp4", ".webm", ".ogg", ".m3u8", ".mov", ".avi"];
   const imageExtensions = [".jpg", ".jpeg", ".png", ".gif", ".webp", ".svg", ".bmp"];
 
+  if (audioExtensions.some(ext => lowerUrl.includes(ext))) return "audio";
   if (videoExtensions.some(ext => lowerUrl.includes(ext))) return "video";
   if (imageExtensions.some(ext => lowerUrl.includes(ext))) return "image";
   if (lowerUrl.includes("/embed/")) return "iframe";
@@ -47,7 +63,7 @@ function detectMediaType(url: string): "video" | "image" | "iframe" {
 }
 
 export function useProviderContent(params: UseProviderContentParams): UseProviderContentResult {
-  const { providerId, providerPath, providerContentPath, fallbackUrl } = params;
+  const { providerId, providerPath, providerContentPath, relatedId, fallbackUrl } = params;
   const [content, setContent] = useState<ProviderContent | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -106,7 +122,8 @@ export function useProviderContent(params: UseProviderContentParams): UseProvide
           return;
         }
 
-        const item = navigateToPath(instructions, providerContentPath);
+        const item = (relatedId && findByRelatedId(instructions.items || [], relatedId))
+          || navigateToPath(instructions, providerContentPath);
 
         if (item) {
           let downloadUrl = item.downloadUrl;
@@ -163,7 +180,7 @@ export function useProviderContent(params: UseProviderContentParams): UseProvide
     };
 
     fetchContent();
-  }, [providerId, providerPath, providerContentPath, fallbackUrl, hasFallback]);
+  }, [providerId, providerPath, providerContentPath, relatedId, fallbackUrl, hasFallback]);
 
   return { content, loading, error };
 }

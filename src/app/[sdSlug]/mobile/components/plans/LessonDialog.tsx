@@ -9,10 +9,12 @@ import { useProviderContent, type ProviderContentChild } from "./useProviderCont
 import { ContentRenderer } from "./ContentRenderer";
 
 // Fallback media-type detection for URLs whose source didn't supply an explicit type.
-function detectMediaType(url: string): "video" | "image" | "iframe" {
+function detectMediaType(url: string): "video" | "image" | "audio" | "iframe" {
   const lowerUrl = url.toLowerCase();
+  const audioExtensions = [".mp3", ".m4a", ".aac", ".wav", ".flac", ".oga"];
   const videoExtensions = [".mp4", ".webm", ".ogg", ".m3u8", ".mov", ".avi"];
   const imageExtensions = [".jpg", ".jpeg", ".png", ".gif", ".webp", ".svg", ".bmp"];
+  if (audioExtensions.some(ext => lowerUrl.includes(ext))) return "audio";
   if (videoExtensions.some(ext => lowerUrl.includes(ext))) return "video";
   if (imageExtensions.some(ext => lowerUrl.includes(ext))) return "image";
   if (lowerUrl.includes("/embed/")) return "iframe";
@@ -43,6 +45,7 @@ export const LessonDialog: React.FC<Props> = (props) => {
     providerId: hasProviderData ? props.providerId : undefined,
     providerPath: hasProviderData ? props.providerPath : undefined,
     providerContentPath: hasProviderData ? props.providerContentPath : undefined,
+    relatedId: hasProviderData ? props.sectionId : undefined,
     fallbackUrl: hasProviderData ? props.downloadUrl : undefined
   });
 
