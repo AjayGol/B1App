@@ -7,6 +7,7 @@ import { Box, Button, Chip, CircularProgress, Dialog, DialogContent, DialogTitle
 import { ApiHelper, Locale, PersonHelper, UserHelper } from "@churchapps/apphelper";
 import type { PersonInterface } from "@churchapps/helpers";
 import { EnvironmentHelper } from "@/helpers/EnvironmentHelper";
+import { rotateWeekdays, weekdayColumn } from "@/helpers/firstDayOfWeek";
 import { mobileTheme } from "../mobileTheme";
 import { EventProcessor } from "../../helpers/eventProcessor";
 import { MarkdownPreviewLight } from "@churchapps/apphelper/markdown";
@@ -17,6 +18,7 @@ interface Props {
   isMember?: boolean;
   onAddEvent: (dateIso: string) => void;
   onEditEvent?: (event: EventRow) => void;
+  firstDayOfWeek?: number;
 }
 
 type RsvpResponse = "yes" | "no" | "maybe";
@@ -91,7 +93,7 @@ const formatTimeRange = (start?: string | Date, end?: string | Date, allDay?: bo
   return `${fmt(s)} – ${fmt(e)}`;
 };
 
-export const GroupCalendarTab = ({ groupId, canManage, isMember, onAddEvent, onEditEvent }: Props) => {
+export const GroupCalendarTab = ({ groupId, canManage, isMember, onAddEvent, onEditEvent, firstDayOfWeek = 0 }: Props) => {
   const tc = mobileTheme.colors;
   const router = useRouter();
   const queryClient = useQueryClient();
@@ -202,14 +204,14 @@ export const GroupCalendarTab = ({ groupId, canManage, isMember, onAddEvent, onE
 
   const monthStart = startOfMonth(currentMonth);
   const monthEnd = endOfMonth(currentMonth);
-  const firstWeekday = monthStart.getDay();
+  const firstWeekday = weekdayColumn(monthStart.getDay(), firstDayOfWeek);
   const daysInMonth = monthEnd.getDate();
 
   const days: (Date | null)[] = [];
   for (let i = 0; i < firstWeekday; i++) days.push(null);
   for (let d = 1; d <= daysInMonth; d++) days.push(new Date(currentMonth.getFullYear(), currentMonth.getMonth(), d));
 
-  const weekdayLabels = ["S", "M", "T", "W", "T", "F", "S"];
+  const weekdayLabels = rotateWeekdays(["S", "M", "T", "W", "T", "F", "S"], firstDayOfWeek);
 
   const goPrev = () => {
     const d = new Date(currentMonth);
@@ -432,6 +434,7 @@ export const GroupCalendarTab = ({ groupId, canManage, isMember, onAddEvent, onE
           {weekdayLabels.map((w, i) => (
             <Box
               key={`wd-${i}`}
+              data-testid={`weekday-${i}`}
               sx={{ textAlign: "center", fontSize: 12, fontWeight: 600, color: tc.primary, py: "4px" }}
             >
               {w}
