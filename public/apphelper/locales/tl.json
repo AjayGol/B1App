@@ -1,36 +1,12 @@
 {
-  "b1Share": {
-    "comment": "Magkomento",
-    "commentPlaceholder": "Magsama ng komento sa iyong post.",
-    "contentShared": "Ibinahagi ang Nilalaman",
-    "group": "Grupo",
-    "sharingToGroup": "Ibinabahagi ang {} sa B1 Group",
-    "validate": {
-      "addComment": "Mangyaring magdagdag ng komento.",
-      "loginFirst": "Mangyaring mag-login muna.",
-      "notMember": "Kasalukuyan kang hindi miyembro ng anumang grupo sa B1.",
-      "selectGroup": "Mangyaring pumili ng isang pangkat."
-    }
-  },
   "common": {
-    "add": "Idagdag",
     "cancel": "Kanselahin",
     "close": "Isara",
-    "date": "Petsa",
     "delete": "Tanggalin",
-    "edit": "I-edit",
-    "error": "Error",
     "pleaseWait": "Mangyaring maghintay...",
     "save": "I-save",
     "search": "Maghanap",
-    "submit": "Ipasa",
     "update": "Update"
-  },
-  "createPerson": {
-    "addNewPerson": "Magdagdag ng Bagong Tao",
-    "email": "Email",
-    "firstName": "Pangalan",
-    "lastName": "Huling pangalan"
   },
   "donation": {
     "bankForm": {
@@ -38,7 +14,6 @@
       "added": "Idinagdag ang bank account. ",
       "company": "kumpanya",
       "firstDeposit": "Unang Deposito",
-      "holderName": "Kinakailangan ang pangalan ng may-ari ng account.",
       "individual": "Indibidwal",
       "name": "Pangalan ng May-ari ng Account",
       "needVerified": "Ang mga bank account ay kailangang ma-verify bago gumawa ng anumang mga donasyon. ",
@@ -59,6 +34,10 @@
       "expirationYear": "Taon ng Pag-expire:",
       "updated": "Matagumpay na na-update ang card."
     },
+    "common": {
+      "cancel": "Cancel",
+      "error": "Error"
+    },
     "donationForm": {
       "annually": "Taun-taon",
       "biWeekly": "Bi-Lingguhan",
@@ -75,7 +54,6 @@
       "makeRecurring": "Gumawa ng Paulit-ulit na Donasyon",
       "method": "Pamamaraan",
       "monthly": "Buwan-buwan",
-      "notes": "Mga Tala",
       "preview": "Silipin ang Donasyon",
       "quarterly": "quarterly",
       "recurringUpdated": "Na-update ang umuulit na donasyon.",
@@ -97,21 +75,41 @@
       "amount": "Halaga",
       "fund": "Pondo"
     },
-    "page": {
-      "amount": "Halaga",
-      "batch": "Batch",
-      "date": "Petsa",
-      "fund": "Pondo",
-      "method": "Pamamaraan",
-      "willAppear": "Lalabas ang mga donasyon kapag naipasok na ang donasyon."
+    "kingdomFunding": {
+      "enterBankDetails": "Enter your bank account details",
+      "enterCardDetails": "Enter card details",
+      "errorProcessingDonation": "Error processing donation",
+      "failedToInitPaymentForm": "Failed to initialize payment form",
+      "failedToLoadPaymentForm": "Failed to load payment form",
+      "failedToProcessCard": "Failed to process card. Please check your card details and try again.",
+      "failedToTokenizeCard": "Failed to tokenize card",
+      "gatewayConfigMissing": "Payment form not available. Gateway configuration missing.",
+      "loadingPaymentForm": "Loading payment form...",
+      "memo": "Memo (optional)",
+      "missingTokenizationKey": "Missing tokenization key",
+      "payWithBank": "Bank (ACH)",
+      "payWithCard": "Card",
+      "paymentFormNotAvailable": "Payment form not available",
+      "paymentFormNotInitialized": "Payment form not initialized",
+      "unexpectedError": "An unexpected error occurred. Please try again.",
+      "validate": {
+        "captchaFailed": "reCAPTCHA verification failed. Please try again.",
+        "captchaRequired": "Please complete the reCAPTCHA verification"
+      }
     },
     "paymentMethods": {
       "addBank": "Magdagdag ng Bank Account",
       "addCard": "Magdagdag ng Card",
       "confirmDelete": "Sigurado ka bang gusto mong tanggalin ang paraan ng pagbabayad na ito?",
       "deleted": "Ang paraan ng pagbabayad ay tinanggal.",
-      "noMethods": "Walang paraan ng pagbabayad.  ",
+      "noMethod": "No Method",
       "verify": "I-verify ang Account"
+    },
+    "paystack": {
+      "emailRequired": "An email address is required to pay with Paystack.",
+      "paymentFailed": "Payment was not completed.",
+      "popupHint": "You'll complete payment in a secure Paystack window. Card, mobile money and bank transfer are accepted.",
+      "saveOnlyWithGift": "Payment methods are saved when you give — check \"Save this card\" while making a gift."
     },
     "preview": {
       "date": "Petsa ng Donasyon",
@@ -130,6 +128,7 @@
       "confirmPause": "Sigurado ka bang gusto mong i-pause itong umuulit na donasyon?",
       "every": "Bawat",
       "interval": "Pagitan",
+      "noSubscriptions": "No Subscriptions",
       "notFound": "Hindi nakita ang paraan ng pagbabayad.",
       "pauseFailed": "Nabigo ang pag-pause ng umuulit na donasyon. Subukan muli.",
       "pauseTooltip": "I-pause ang umuulit na donasyon",
@@ -183,13 +182,18 @@
       "toggleWeekday": "I-toggle ang {} para sa lingguhang recurrence"
     }
   },
+  "fileUpload": {
+    "file": "File",
+    "quotaExceeded": "Storage quota exceeded. Delete unused files or upgrade your storage plan.",
+    "uploadFailed": "Upload failed. Please try again."
+  },
   "formSubmissionEdit": {
     "back": "Bumalik",
-    "continue": "Magpatuloy",
-    "stepProgress": "{current} ng {total}",
     "confirmDelete": "Sigurado ka bang gusto mong tanggalin ang data ng form na ito?",
+    "continue": "Magpatuloy",
     "editForm": "I-edit ang Form",
     "isRequired": "ay kinakailangan",
+    "stepProgress": "{current} ng {total}",
     "submit": "Ipasa"
   },
   "gallery": {
@@ -197,22 +201,16 @@
     "confirmDelete": "Sigurado ka bang gusto mong tanggalin ang larawang ito mula sa gallery?",
     "freeForm": "Libreng Form"
   },
-  "iconPicker": {
-    "iconsAvailable": "magagamit ang mga icon",
-    "matchingResults": "pagtutugma ng mga resulta",
-    "search": "Mga icon ng paghahanap..."
-  },
   "login": {
-    "createAccount": "Gumawa ng account",
     "email": "Email",
     "enterCode": "Ipasok ang Verification Code",
     "enterCodeInstructions": "Ipasok ang 6-digit na code na kaka-email lang namin sa iyo.",
     "expiredLink": "Ang kasalukuyang link ay nag-expire na.",
     "forgot": "Nakalimutan ang password",
-    "goLogin": "Pumunta sa Login",
     "login": "Mag log in",
     "noAcc": "Wala ka pang account?",
     "noAccountFound": "Walang account na natagpuan sa email na iyon. Mangyaring magparehistro upang magpatuloy.",
+    "or": "or",
     "password": "Password",
     "register": "Magrehistro",
     "registerThankYou": "Salamat sa pagpaparehistro! ",
@@ -221,7 +219,6 @@
     "reset": "I-reset",
     "resetInstructions": "Ilagay ang iyong email address upang humiling ng pag-reset ng password.",
     "resetPassword": "I-reset ang Password",
-    "resetSent": "Naipadala ang email sa pag-reset ng password!",
     "setPassword": "Itakda ang Password",
     "signIn": "Mag-sign In",
     "signInTitle": "Mangyaring Mag-sign In",
@@ -243,50 +240,24 @@
   },
   "markdownEditor": {
     "content": "Nilalaman",
-    "markdownEditor": "Markdown Editor",
     "markdownGuide": "Gabay sa Markdown"
-  },
-  "month": {
-    "april": "Abril",
-    "august": "Agosto",
-    "december": "Disyembre",
-    "february": "Pebrero",
-    "january": "Enero",
-    "july": "Hulyo",
-    "june": "Hunyo",
-    "march": "Marso",
-    "may": "May",
-    "november": "Nobyembre",
-    "october": "Oktubre",
-    "september": "Setyembre"
   },
   "notes": {
     "comment": "komento",
     "comments": "mga komento",
     "notes": "Mga Tala",
-    "startConversation": "Magsimula ng pag-uusap",
+    "notifyOff": "Notify Off",
+    "notifyOn": "Notify On",
+    "openFile": "Open file",
     "validate": {
       "content": "Mangyaring maglagay ng tala."
-    },
-    "viewAll": "Tingnan lahat"
+    }
   },
   "person": {
     "email": "Email",
     "firstName": "Pangalan",
     "lastName": "Huling pangalan",
-    "name": "Pangalan",
-    "noRec": "Wala kang talaan ng tao?",
-    "person": "Tao",
-    "years": "taon"
-  },
-  "reporting": {
-    "detailed": "Detalyadong Ulat",
-    "downloadOptions": "Mga Opsyon sa Pag-download",
-    "noData": "Walang data na ipapakita.",
-    "runReport": "Patakbuhin ang Ulat",
-    "sampleTemplate": "Halimbawang Word Template",
-    "summary": "Buod",
-    "useFilter": "Gamitin ang filter upang patakbuhin ang ulat."
+    "name": "Pangalan"
   },
   "selectChurch": {
     "address1": "Linya ng Address 1",
@@ -319,21 +290,9 @@
     "documentation": "Dokumentasyon"
   },
   "wrapper": {
-    "chatWith": "Makipag-usap kay",
-    "deleteChurch": "Tanggalin ang simbahan sa listahan",
-    "editAccount": "I-edit ang Account",
-    "editChurchProfile": "I-edit ang Profile ng Simbahan",
-    "editProfile": "I-edit ang Profile",
-    "logout": "Mag-logout",
-    "messages": "Mga Mensahe",
     "newPrivateMessage": "Bagong Pribadong Mensahe",
-    "notifications": "Mga Abiso",
+    "privateConversation": "Private Conversation",
     "privateMessage": "Pribadong Mensahe",
-    "profile": "Profile",
-    "searchForPerson": "Maghanap ng isang tao",
-    "support": "Suporta",
-    "sureRemoveChurch": "Sigurado ka bang gusto mong tanggalin ang {} mula sa listahan?",
-    "switchApp": "Lumipat ng App",
-    "switchChurch": "Lumipat ng Simbahan"
+    "searchForPerson": "Maghanap ng isang tao"
   }
 }
