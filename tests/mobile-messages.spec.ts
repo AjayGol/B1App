@@ -7,6 +7,35 @@ test.describe("Mobile messages", () => {
     await expect(mobileLogoutButton(page)).toBeVisible();
   });
 
+  test("deleting a conversation asks for confirmation first", async ({ page }) => {
+    await page.goto("/mobile/messages");
+    const deleteBtn = page.locator('[data-testid^="conversation-delete-"]').first();
+    await expect(deleteBtn).toBeVisible({ timeout: 30000 });
+    await deleteBtn.click();
+    const dialog = page.getByRole("dialog");
+    await expect(dialog).toBeVisible({ timeout: 5000 });
+    await expect(dialog).toContainText(/Delete conversation/i);
+    await dialog.getByRole("button", { name: /^Cancel$/i }).click();
+    await expect(dialog).toBeHidden({ timeout: 5000 });
+    await expect(deleteBtn).toBeVisible();
+  });
+
+  test("a link with a malformed escape does not crash the conversation", async ({ page }) => {
+    await page.goto("/mobile/messages");
+    const row = page.locator('[data-testid^="conversation-row-"]').first();
+    await expect(row).toBeVisible({ timeout: 30000 });
+    await row.click();
+    const composer = page.getByPlaceholder(/Type a message/i);
+    await expect(composer).toBeVisible({ timeout: 15000 });
+    const text = `pct ${Date.now()} https://x.com/100%`;
+    await composer.fill(text);
+    await page.getByRole("button", { name: /^Send$/i }).click();
+    await expect(page.locator("main")).toContainText(text, { timeout: 15000 });
+    await page.reload();
+    await expect(page.locator("main")).toContainText(text, { timeout: 30000 });
+    await expect(page.getByPlaceholder(/Type a message/i)).toBeVisible();
+  });
+
   test("compose message screen loads", async ({ page }) => {
     await page.goto("/mobile/messagesNew");
     await expect(mobileLogoutButton(page)).toBeVisible();

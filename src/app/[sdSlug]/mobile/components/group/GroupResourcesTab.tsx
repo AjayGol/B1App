@@ -6,6 +6,11 @@ import {
   Box,
   Button,
   Collapse,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogContentText,
+  DialogTitle,
   Icon,
   IconButton,
   LinearProgress,
@@ -38,6 +43,7 @@ interface Props {
 }
 
 const STORAGE_CAP = 100_000_000;
+const isHttpUrl = (url?: string) => !!url && /^https?:\/\//i.test(url);
 
 const formatSize = (bytes: number) => {
   if (bytes > 1_000_000) return `${(Math.round(bytes / 10_000) / 100).toFixed(2)}MB`;
@@ -101,22 +107,14 @@ export const GroupResourcesTab = ({ groupId, canEdit }: Props) => {
     load();
   }, [load]);
 
-  const handleDeleteFile = async (f: FileRow) => {
-    if (!f.id) return;
-    if (!window.confirm(`Delete ${f.fileName || "file"}?`)) return;
-    try {
-      await ApiHelper.delete(`/files/${f.id}`, "ContentApi");
-      load();
-    } catch {
+  const [pendingDelete, setPendingDelete] = React.useState<{ kind: "file" | "link"; id: string; name: string } | null>(null);
 
-    }
-  };
-
-  const handleDeleteLink = async (l: LinkRow) => {
-    if (!l.id) return;
-    if (!window.confirm(Locale.label("mobile.group.deleteLinkConfirm").replace("{}", l.text || Locale.label("mobile.group.linkFallback")))) return;
+  const handleConfirmDelete = async () => {
+    const target = pendingDelete;
+    setPendingDelete(null);
+    if (!target) return;
     try {
-      await ApiHelper.delete(`/links/${l.id}`, "ContentApi");
+      await ApiHelper.delete(`/${target.kind === "file" ? "files" : "links"}/${target.id}`, "ContentApi");
       load();
     } catch {
 
@@ -133,11 +131,17 @@ export const GroupResourcesTab = ({ groupId, canEdit }: Props) => {
       setLinkError(Locale.label("mobile.group.enterUrl"));
       return;
     }
+    let url = linkUrl.trim();
+    if (!/^[a-z][a-z0-9+.-]*:/i.test(url)) url = "https://" + url;
+    if (!isHttpUrl(url)) {
+      setLinkError(Locale.label("mobile.group.invalidUrl"));
+      return;
+    }
     setLinkSaving(true);
     try {
       const payload = {
         category: "groupLink",
-        url: linkUrl.trim(),
+        url,
         linkType: "url",
         text: linkText.trim(),
         linkData: groupId,
@@ -188,6 +192,7 @@ export const GroupResourcesTab = ({ groupId, canEdit }: Props) => {
     } catch (e: any) {
       setUploadError(e?.message || Locale.label("mobile.group.uploadFailed"));
       setUploadProgress(-1);
+      if (fileInputRef.current) fileInputRef.current.value = "";
     }
   };
 
@@ -264,7 +269,7 @@ export const GroupResourcesTab = ({ groupId, canEdit }: Props) => {
           <Typography sx={{ fontSize: 12, color: tc.textSecondary }}>{formatSize(f.size || 0)}</Typography>
         </Box>
         {canEdit && (
-          <IconButton aria-label={Locale.label("mobile.group.deleteFile")} onClick={() => handleDeleteFile(f)} sx={{ color: tc.error }}>
+          <IconButton aria-label={Locale.label("mobile.group.deleteFile")} onClick={() => f.id && setPendingDelete({ kind: "file", id: f.id, name: f.fileName || Locale.label("mobile.group.fileFallback") })} sx={{ color: tc.error }}>
             <Icon>delete_outline</Icon>
           </IconButton>
         )}
@@ -301,7 +306,7 @@ export const GroupResourcesTab = ({ groupId, canEdit }: Props) => {
       </Box>
       <Box
         component="a"
-        href={l.url}
+        href={isHttpUrl(l.url) ? l.url : undefined}
         target="_blank"
         rel="noopener noreferrer"
         sx={{ flex: 1, minWidth: 0, textDecoration: "none", color: "inherit" }}
@@ -331,7 +336,7 @@ export const GroupResourcesTab = ({ groupId, canEdit }: Props) => {
         </Typography>
       </Box>
       {canEdit && (
-        <IconButton aria-label={Locale.label("mobile.group.deleteLink")} onClick={() => handleDeleteLink(l)} sx={{ color: tc.error }}>
+        <IconButton aria-label={Locale.label("mobile.group.deleteLink")} onClick={() => l.id && setPendingDelete({ kind: "link", id: l.id, name: l.text || Locale.label("mobile.group.linkFallback") })} sx={{ color: tc.error }}>
           <Icon>delete_outline</Icon>
         </IconButton>
       )}
@@ -586,6 +591,18 @@ export const GroupResourcesTab = ({ groupId, canEdit }: Props) => {
           )}
         </Box>
       )}
+      <Dialog open={!!pendingDelete} onClose={() => setPendingDelete(null)}>
+        <DialogTitle>{Locale.label("mobile.group.deleteResourceTitle")}</DialogTitle>
+        <DialogContent>
+          <DialogContentText>
+            {Locale.label("mobile.group.deleteResourceConfirm").replace("{}", pendingDelete?.name || "")}
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setPendingDelete(null)}>{Locale.label("mobile.group.cancel")}</Button>
+          <Button color="error" onClick={handleConfirmDelete} data-testid="confirm-delete-resource">{Locale.label("mobile.group.delete")}</Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 };

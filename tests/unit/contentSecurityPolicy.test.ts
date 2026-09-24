@@ -60,10 +60,11 @@ describe("buildContentSecurityPolicy", () => {
     }
   });
 
-  it("allows Google Maps geocode and JS hosts on connect-src", () => {
+  it("lets church customJS widgets (giving launchers, chat) call any https/wss origin on connect-src", () => {
     const connectSrc = directive(buildContentSecurityPolicy({ nonce: "n" }), "connect-src");
-    assert.ok(connectSrc.includes("https://maps.googleapis.com"));
-    assert.ok(connectSrc.includes("https://maps.gstatic.com"));
+    assert.ok(connectSrc.includes("https:"));
+    assert.ok(connectSrc.includes("wss:"));
+    assert.equal(connectSrc.includes("http:"), false);
   });
 
   it("keeps style-src inline (React style attributes) and matches the CSS @import allowlist", () => {

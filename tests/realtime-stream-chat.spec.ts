@@ -2,6 +2,7 @@ import { test, expect, type BrowserContext, type Page } from "@playwright/test";
 import { waitForRoomJoin } from "./helpers/realtime";
 
 const STREAM_URL = "/stream";
+const SOCKET_PORT = new URL(process.env.NEXT_PUBLIC_MESSAGING_API_SOCKET || "ws://localhost:8087").port;
 
 async function openAnonymous(page: Page) {
   await page.context().clearCookies();
@@ -71,7 +72,7 @@ test.describe("Live stream chat — unified delivery migration smoke", () => {
     await openAnonymous(page);
     await page.waitForTimeout(3000);
 
-    const messagingSockets = sockets.filter((s) => /:8087|messaging/i.test(s.url));
+    const messagingSockets = sockets.filter((s) => s.url.includes(":" + SOCKET_PORT) || /messaging/i.test(s.url));
     expect(messagingSockets.length, `Expected a MessagingApi WebSocket; saw: ${sockets.map((s) => s.url).join(", ")}`).toBeGreaterThan(0);
     expect(messagingSockets.some((s) => s.sentGetId), "Expected the client to send 'getId' over the socket").toBe(true);
   });
@@ -121,6 +122,15 @@ test.describe("Live stream chat — cross-user realtime", () => {
     await expect(viewerB.page.locator("#chatReceive")).toContainText(stamp, { timeout: 15000 });
   });
 
+  test("a link with a malformed escape does not crash chat for other viewers", async () => {
+    const stamp = `pct-${Date.now()} https://x.com/100%`;
+    await sendChat(viewerA.page, stamp);
+
+    await expect(viewerB.page.locator("#chatReceive")).toContainText(stamp, { timeout: 15000 });
+    await expect(viewerA.page.locator("#chatReceive")).toContainText(stamp, { timeout: 15000 });
+    await expect(viewerB.page.locator("#sendChatText")).toBeVisible();
+  });
+
   test("attendance reflects both viewers", async () => {
     const countLinkA = viewerA.page.locator("#attendanceCount");
     await expect(countLinkA).toBeVisible({ timeout: 15000 });
@@ -134,7 +144,7 @@ test.describe("Live stream chat — cross-user realtime", () => {
   });
 });
 
-const MESSAGING_API = "http://localhost:8084/messaging";
+const MESSAGING_API = (process.env.API_BASE || "http://localhost:8084") + "/messaging";
 const CHURCH_ID = "CHU00000001";
 const DEMO_SERVICE_ID = "STR00000002";
 const DEMO_PERSON_ID = "PER00000082";

@@ -9,6 +9,7 @@ import { useQuery } from "@tanstack/react-query";
 import type { EventInterface, GroupInterface, GroupMemberInterface } from "@churchapps/helpers";
 import { ConfigurationInterface } from "@/helpers/ConfigHelper";
 import { mobileTheme } from "../mobileTheme";
+import { cssUrl } from "../util";
 import { GroupContact } from "@/components/groups/GroupContact";
 
 interface Props {
@@ -86,7 +87,7 @@ export const AnonymousGroupView = ({ idOrSlug, config }: Props) => {
           height: 220,
           borderRadius: "20px",
           overflow: "hidden",
-          background: hasPhoto ? `url(${group!.photoUrl}) center / cover no-repeat, ${mobileTheme.colorWash}` : mobileTheme.colorWash
+          background: hasPhoto ? `${cssUrl(group!.photoUrl)} center / cover no-repeat, ${mobileTheme.colorWash}` : mobileTheme.colorWash
         }}
       >
         <Box
@@ -197,12 +198,8 @@ export const AnonymousGroupView = ({ idOrSlug, config }: Props) => {
                   p: 1,
                   borderRadius: "8px",
                   transition: "background-color 0.2s ease, transform 0.1s ease",
-                  "&:hover": {
-                    bgcolor: "action.hover"
-                  },
-                  "&:active": {
-                    transform: "scale(0.98)"
-                  }
+                  "&:hover": { bgcolor: "action.hover" },
+                  "&:active": { transform: "scale(0.98)" }
                 }}
               >
                 {photo ? (
@@ -363,8 +360,10 @@ export const AnonymousGroupView = ({ idOrSlug, config }: Props) => {
     </Box>
   );
 
+  const returnUrl = typeof window !== "undefined" ? encodeURIComponent(window.location.pathname) : `/mobile/groups/${idOrSlug}`;
+
   return (
-    <Box sx={{ p: `${mobileTheme.spacing.md}px`, bgcolor: tc.background, minHeight: "100%" }}>
+    <Box sx={{ p: `${mobileTheme.spacing.md}px`, pb: group ? "88px" : `${mobileTheme.spacing.md}px`, bgcolor: tc.background, minHeight: "100%" }}>
       {groupLoading && renderSkeleton()}
       {!groupLoading && !group && renderNotFound()}
       {group && (
@@ -374,6 +373,38 @@ export const AnonymousGroupView = ({ idOrSlug, config }: Props) => {
           {renderLeaders()}
           {renderUpcomingEvents()}
           {renderContact()}
+        </Box>
+      )}
+      {group && (
+        <Box
+          sx={{
+            position: "sticky",
+            bottom: 0,
+            mt: `${mobileTheme.spacing.md}px`,
+            mx: `-${mobileTheme.spacing.md}px`,
+            px: `${mobileTheme.spacing.md}px`,
+            py: `${mobileTheme.spacing.sm}px`,
+            bgcolor: tc.surface,
+            borderTop: `1px solid ${tc.border}`
+          }}
+        >
+          <Button
+            variant="contained"
+            fullWidth
+            href={`/mobile/login?returnUrl=${returnUrl}`}
+            data-testid="anonymous-group-sign-in"
+            sx={{
+              bgcolor: tc.primary,
+              color: tc.onPrimary,
+              textTransform: "none",
+              fontWeight: 600,
+              borderRadius: `${mobileTheme.radius.md}px`,
+              py: "10px",
+              "&:hover": { bgcolor: tc.primary }
+            }}
+          >
+            {Locale.label("mobile.group.signInToJoin")}
+          </Button>
         </Box>
       )}
     </Box>

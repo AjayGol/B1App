@@ -14,6 +14,8 @@ import { DefaultPageWrapper } from "../components/DefaultPageWrapper";
 
 type PageParams = Promise<{ sdSlug: string; pageSlug: string; id:string; }>
 
+export const dynamic = "force-dynamic";
+
 const loadSharedData = (sdSlug:string, pageSlug:string) => {
   EnvironmentHelper.init();
   return loadData(sdSlug, pageSlug);
@@ -24,7 +26,7 @@ export async function generateMetadata({ params }: {params:PageParams}): Promise
   const props = await loadSharedData(sdSlug, pageSlug);
 
   const title = Locale.label("pageSlug.metaForms");
-  return MetaHelper.getMetaData(title + " - " + props.config.church.name, "My", undefined, props.config.appearance);
+  return MetaHelper.getMetaData(title + " - " + props.config.church.name, title + " - " + props.config.church.name, undefined, props.config.appearance);
 }
 
 const loadData = async (sdSlug:string, pageSlug:string) => {

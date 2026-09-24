@@ -1,8 +1,7 @@
 import React from "react";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/layouts/Footer";
-import { ConfigurationInterface } from "@/helpers/ConfigHelper";
-import { ApiHelper } from "@churchapps/apphelper";
+import { ConfigurationInterface, fetchCached } from "@/helpers/ConfigHelper";
 import { CssBaseline } from "@mui/material";
 
 type Props = {
@@ -14,13 +13,13 @@ type Props = {
 };
 
 
-//add helmet here
-
 export async function DefaultPageWrapper(props: Props) {
-  const a = 0;
   const config = props.config as ConfigurationInterface;
 
-  const footerSections = await ApiHelper.getAnonymous("/blocks/public/footer/" + config.church.id + (config.siteId ? "?siteId=" + config.siteId : ""), "ContentApi");
+  let footerSections: any[] = [];
+  try {
+    footerSections = await fetchCached<any[]>("/blocks/public/footer/" + config.church.id + (config.siteId ? "?siteId=" + config.siteId : ""), "ContentApi", config.keyName || config.church.subDomain || "");
+  } catch { /* render the page without footer blocks */ }
 
   return (<>
     <CssBaseline />

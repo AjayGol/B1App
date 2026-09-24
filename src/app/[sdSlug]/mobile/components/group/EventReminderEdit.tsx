@@ -21,10 +21,10 @@ interface Props {
 }
 
 const OFFSET_PRESETS = [
-  { key: "days7", minutes: 10080 },
-  { key: "days3", minutes: 4320 },
-  { key: "day1", minutes: 1440 },
-  { key: "dayOf", minutes: 0 }
+  { minutes: 10080, label: () => Locale.label("mobile.group.reminders.days7") },
+  { minutes: 4320, label: () => Locale.label("mobile.group.reminders.days3") },
+  { minutes: 1440, label: () => Locale.label("mobile.group.reminders.day1") },
+  { minutes: 0, label: () => Locale.label("mobile.group.reminders.dayOf") }
 ];
 const MAX_OFFSETS = 3;
 
@@ -42,6 +42,7 @@ export const EventReminderEdit = ({ eventId, hasRegistration }: Props) => {
   const [channels, setChannels] = React.useState<string[]>(["push", "email"]);
   const [saving, setSaving] = React.useState(false);
   const [saved, setSaved] = React.useState(false);
+  const [saveFailed, setSaveFailed] = React.useState(false);
 
   React.useEffect(() => {
     if (!eventId) return;
@@ -68,6 +69,7 @@ export const EventReminderEdit = ({ eventId, hasRegistration }: Props) => {
   const handleSave = async () => {
     setSaving(true);
     setSaved(false);
+    setSaveFailed(false);
     try {
       if (!enabled && defId) {
         await ApiHelper.delete("/reminders/" + defId, "MessagingApi");
@@ -78,31 +80,31 @@ export const EventReminderEdit = ({ eventId, hasRegistration }: Props) => {
         if (savedDef?.id) setDefId(savedDef.id);
       }
       setSaved(true);
+    } catch {
+      setSaveFailed(true);
     } finally {
       setSaving(false);
     }
   };
 
-  const l = (key: string) => Locale.label("mobile.group.reminders." + key);
-
   return (
     <Box sx={{ borderTop: `1px solid ${tc.iconBackground}`, pt: 2, display: "flex", flexDirection: "column", gap: 2 }}>
       <FormControlLabel
         control={<Switch checked={enabled} onChange={(e) => { setEnabled(e.target.checked); setSaved(false); }} />}
-        label={<Typography sx={{ fontSize: 15, fontWeight: 600, color: tc.text }}>{l("enable")}</Typography>}
+        label={<Typography sx={{ fontSize: 15, fontWeight: 600, color: tc.text }}>{Locale.label("mobile.group.reminders.enable")}</Typography>}
       />
 
       {enabled && (
         <>
           <Box>
-            <Typography sx={{ fontSize: 13, color: tc.textSecondary, mb: 1 }}>{l("when")}</Typography>
+            <Typography sx={{ fontSize: 13, color: tc.textSecondary, mb: 1 }}>{Locale.label("mobile.group.reminders.when")}</Typography>
             <Box sx={{ display: "flex", gap: 1, flexWrap: "wrap" }}>
               {OFFSET_PRESETS.map((p) => {
                 const on = offsets.includes(p.minutes);
                 return (
                   <Chip
                     key={p.minutes}
-                    label={l(p.key)}
+                    label={p.label()}
                     onClick={() => toggleOffset(p.minutes)}
                     disabled={!on && offsets.length >= MAX_OFFSETS}
                     sx={{
@@ -123,7 +125,7 @@ export const EventReminderEdit = ({ eventId, hasRegistration }: Props) => {
           <TextField
             size="small"
             type="time"
-            label={l("timeOfDay")}
+            label={Locale.label("mobile.group.reminders.timeOfDay")}
             value={sendLocalTime}
             onChange={(e) => setSendLocalTime(e.target.value)}
             InputLabelProps={{ shrink: true }}
@@ -133,28 +135,28 @@ export const EventReminderEdit = ({ eventId, hasRegistration }: Props) => {
           <TextField
             select
             size="small"
-            label={l("who")}
+            label={Locale.label("mobile.group.reminders.who")}
             value={recipientMode}
             onChange={(e) => setRecipientMode(e.target.value)}
           >
-            <MenuItem value="registrants">{l("modeRegistrants")}</MenuItem>
-            <MenuItem value="registrantsHoh">{l("modeRegistrantsHoh")}</MenuItem>
-            <MenuItem value="group">{l("modeGroup")}</MenuItem>
-            <MenuItem value="auto">{l("modeAuto")}</MenuItem>
+            <MenuItem value="registrants">{Locale.label("mobile.group.reminders.modeRegistrants")}</MenuItem>
+            <MenuItem value="registrantsHoh">{Locale.label("mobile.group.reminders.modeRegistrantsHoh")}</MenuItem>
+            <MenuItem value="group">{Locale.label("mobile.group.reminders.modeGroup")}</MenuItem>
+            <MenuItem value="auto">{Locale.label("mobile.group.reminders.modeAuto")}</MenuItem>
           </TextField>
 
           <TextField
             size="small"
             multiline
             minRows={2}
-            label={l("message")}
+            label={Locale.label("mobile.group.reminders.message")}
             value={message}
             onChange={(e) => setMessage(e.target.value)}
-            helperText={l("messageHint")}
+            helperText={Locale.label("mobile.group.reminders.messageHint")}
           />
 
           <Box>
-            <Typography sx={{ fontSize: 13, color: tc.textSecondary, mb: 0.5 }}>{l("channels")}</Typography>
+            <Typography sx={{ fontSize: 13, color: tc.textSecondary, mb: 0.5 }}>{Locale.label("mobile.group.reminders.channels")}</Typography>
             <Box sx={{ display: "flex", gap: 2 }}>
               <FormControlLabel
                 control={<Checkbox size="small" checked={channels.includes("push")} onChange={() => toggleChannel("push")} />}
@@ -174,12 +176,13 @@ export const EventReminderEdit = ({ eventId, hasRegistration }: Props) => {
           variant="outlined"
           size="small"
           onClick={handleSave}
-          disabled={saving || (enabled && offsets.length === 0)}
+          disabled={saving || (enabled && (offsets.length === 0 || channels.length === 0))}
           sx={{ textTransform: "none", borderColor: tc.primary, color: tc.primary }}
         >
-          {saving ? Locale.label("mobile.group.saving") : l("saveReminder")}
+          {saving ? Locale.label("mobile.group.saving") : Locale.label("mobile.group.reminders.saveReminder")}
         </Button>
-        {saved && <Typography sx={{ fontSize: 13, color: tc.success }}>{l("saved")}</Typography>}
+        {saved && <Typography sx={{ fontSize: 13, color: tc.success }}>{Locale.label("mobile.group.reminders.saved")}</Typography>}
+        {saveFailed && <Typography sx={{ fontSize: 13, color: tc.error }}>{Locale.label("mobile.group.reminders.saveFailed")}</Typography>}
       </Box>
     </Box>
   );

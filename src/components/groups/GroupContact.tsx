@@ -43,19 +43,23 @@ export function GroupContact({ leaders, group, config }: Props) {
     setFormData(fd);
   };
 
+  const canSubmit = !!(formData.personId && formData.firstName?.trim() && formData.email?.trim() && formData.message?.trim());
+
   const handleSubmit = async (e: React.MouseEvent) => {
     if (e !== null) e.preventDefault();
+    if (!canSubmit) return;
     const email = {
       churchId: formData.churchId,
       personId: formData.personId,
+      groupId: group.id,
       appName: "B1",
       subject: "Contact Request For " + group.name,
       body:
-        "First Name: " + formData.firstName + "<br />"
-        + "Last Name: " + formData.lastName + "<br />"
-        + "Email Address: " + formData.email + "<br />"
-        + "Phone Number: " + formData.phone + "<br />"
-        + "Message: " + formData.message
+        "First Name: " + (formData.firstName || "").trim() + "<br />"
+        + "Last Name: " + (formData.lastName || "").trim() + "<br />"
+        + "Email Address: " + (formData.email || "").trim() + "<br />"
+        + "Phone Number: " + (formData.phone || "").trim() + "<br />"
+        + "Message: " + (formData.message || "").trim()
     };
 
     try {
@@ -119,14 +123,15 @@ export function GroupContact({ leaders, group, config }: Props) {
               </Select>
             </FormControl>
           )}
-          <TextField fullWidth label={Locale.label("groups.firstName")} name="firstName" value={formData.firstName || ""} onChange={handleChange} aria-label={Locale.label("groups.firstNameLabel")} data-testid="group-contact-first-name-input" />
-          <TextField fullWidth label={Locale.label("groups.lastName")} name="lastName" value={formData.lastName || ""} onChange={handleChange} aria-label={Locale.label("groups.lastNameLabel")} data-testid="group-contact-last-name-input" />
-          <TextField fullWidth label={Locale.label("groups.email")} name="email" value={formData.email || ""} onChange={handleChange} aria-label={Locale.label("groups.emailLabel")} data-testid="group-contact-email-input" />
-          <TextField fullWidth label={Locale.label("groups.phone")} name="phone" value={formData.phone || ""} onChange={handleChange} aria-label={Locale.label("groups.phoneLabel")} data-testid="group-contact-phone-input" />
-          <TextField fullWidth label={Locale.label("groups.message")} name="message" value={formData.message || ""} onChange={handleChange} multiline rows={4} aria-label={Locale.label("groups.messageLabel")} data-testid="group-contact-message-input" />
+          <TextField fullWidth label={Locale.label("groups.firstNameLabel")} name="firstName" value={formData.firstName || ""} onChange={handleChange} aria-label={Locale.label("groups.firstNameLabel")} data-testid="group-contact-first-name-input" />
+          <TextField fullWidth label={Locale.label("groups.lastNameLabel")} name="lastName" value={formData.lastName || ""} onChange={handleChange} aria-label={Locale.label("groups.lastNameLabel")} data-testid="group-contact-last-name-input" />
+          <TextField fullWidth label={Locale.label("groups.emailLabel")} name="email" value={formData.email || ""} onChange={handleChange} aria-label={Locale.label("groups.emailLabel")} data-testid="group-contact-email-input" />
+          <TextField fullWidth label={Locale.label("groups.phoneLabel")} name="phone" value={formData.phone || ""} onChange={handleChange} aria-label={Locale.label("groups.phoneLabel")} data-testid="group-contact-phone-input" />
+          <TextField fullWidth label={Locale.label("groups.messageLabel")} name="message" value={formData.message || ""} onChange={handleChange} multiline rows={4} aria-label={Locale.label("groups.messageLabel")} data-testid="group-contact-message-input" />
           <Box sx={{ display: "flex", justifyContent: "center", mt: 1 }}>
             <Button
               onClick={handleSubmit}
+              disabled={!canSubmit}
               variant="contained"
               id="conbtn"
               style={{ height: "50px", fontWeight: "bold", width: "200px" }}

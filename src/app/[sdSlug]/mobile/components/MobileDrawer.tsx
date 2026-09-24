@@ -21,10 +21,11 @@ import { useMobileThemeMode } from "./MobileThemeProvider";
 
 interface Props {
   links: LinkInterface[];
+  churchName?: string;
   onNavigate?: () => void;
 }
 
-export const MobileDrawer = ({ links, onNavigate }: Props) => {
+export const MobileDrawer = ({ links, churchName, onNavigate }: Props) => {
   const context = useContext(UserContext);
   const router = useRouter();
   const pathname = usePathname();
@@ -68,7 +69,7 @@ export const MobileDrawer = ({ links, onNavigate }: Props) => {
   };
 
   return (
-    <Box role="navigation" aria-label={Locale.label("mobile.components.navigation")} sx={{ height: "100%", display: "flex", flexDirection: "column", bgcolor: tc.surface }}>
+    <Box role="navigation" aria-label={Locale.label("mobile.components.navigation")} sx={{ height: "100%", display: "flex", flexDirection: "column", bgcolor: tc.surface, pt: mobileTheme.safe.top, pb: mobileTheme.safe.bottom }}>
 
       <Box sx={{
         p: `${mobileTheme.spacing.md}px`,
@@ -331,11 +332,7 @@ export const MobileDrawer = ({ links, onNavigate }: Props) => {
             disableElevation
             startIcon={<LoginIcon sx={{ fontSize: 24 }} />}
             component="a"
-            href={(() => {
-
-              const returnUrl = typeof window !== "undefined" ? encodeURIComponent(window.location.pathname) : "";
-              return returnUrl ? `/mobile/login?returnUrl=${returnUrl}` : "/mobile/login";
-            })()}
+            href={pathname ? `/mobile/login?returnUrl=${encodeURIComponent(pathname)}` : "/mobile/login"}
             sx={{
               bgcolor: tc.primary,
               color: tc.onPrimary,
@@ -352,9 +349,11 @@ export const MobileDrawer = ({ links, onNavigate }: Props) => {
             {Locale.label("mobile.components.signIn")}
           </Button>
         )}
-        <Typography sx={{ fontSize: 12, color: tc.disabled, textAlign: "center" }}>
-          {Locale.label("mobile.components.b1MobileWeb")}
-        </Typography>
+        {churchName && (
+          <Typography sx={{ fontSize: 12, color: tc.disabled, textAlign: "center" }}>
+            {churchName}
+          </Typography>
+        )}
         <Typography sx={{ fontSize: 12, textAlign: "center", mt: 0.5 }}>
           <Box
             component="a"

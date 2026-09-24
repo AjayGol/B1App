@@ -54,6 +54,13 @@ const localToIsoString = (localValue: string) => {
   return isNaN(d.getTime()) ? "" : d.toISOString();
 };
 
+// UNTIL is inclusive, so end the series at the close of the day before the clicked occurrence.
+// EventHelper.getFullRRule feeds dtstart as local wall-clock labelled UTC, so UNTIL must use the same frame.
+const endBefore = (occurrence: Date | string) => {
+  const d = new Date(occurrence);
+  return new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate(), 0, 0, -1));
+};
+
 export const CreateEventModal = ({ open, groupId, initialDateIso, event: eventProp, onClose, onSaved }: Props) => {
   const tc = mobileTheme.colors;
   const isEdit = !!eventProp?.id;
@@ -112,30 +119,32 @@ export const CreateEventModal = ({ open, groupId, initialDateIso, event: eventPr
   const [error, setError] = React.useState<string | null>(null);
   const [recurrenceModalType, setRecurrenceModalType] = React.useState<"save" | "delete" | "">("");
   const [booking, setBooking] = React.useState<BookingSelection>(emptyBookingSelection());
+  const createdIdRef = React.useRef<string | undefined>(undefined);
   const [notice, setNotice] = React.useState<string | null>(null);
 
   React.useEffect(() => {
-    if (open) {
-      const d = computeDefaults();
-      setTitle(d.title);
-      setDescription(d.description);
-      setStart(d.start);
-      setEnd(d.end);
-      setAllDay(d.allDay);
-      setVisibility(d.visibility);
-      setRecurrenceModalType("");
-      setError(null);
-      const hasRule = (d.recurrenceRule?.length ?? 0) > 0;
-      setRecurring(hasRule);
-      setRRule(d.recurrenceRule || "");
-      setRegistrationEnabled(d.registrationEnabled);
-      setCapacity(d.capacity);
-      setRegistrationOpenDate(d.registrationOpenDate);
-      setRegistrationCloseDate(d.registrationCloseDate);
-      setTags(d.tags);
-      setAllowRsvps(!((eventProp as any)?.rsvpDisabled ?? false));
-    }
-  }, [open, computeDefaults, eventProp]);
+    if (!open) return;
+    const d = computeDefaults();
+    createdIdRef.current = undefined;
+    setTitle(d.title);
+    setDescription(d.description);
+    setStart(d.start);
+    setEnd(d.end);
+    setAllDay(d.allDay);
+    setVisibility(d.visibility);
+    setRecurrenceModalType("");
+    setError(null);
+    const hasRule = (d.recurrenceRule?.length ?? 0) > 0;
+    setRecurring(hasRule);
+    setRRule(d.recurrenceRule || "");
+    setRegistrationEnabled(d.registrationEnabled);
+    setCapacity(d.capacity);
+    setRegistrationOpenDate(d.registrationOpenDate);
+    setRegistrationCloseDate(d.registrationCloseDate);
+    setTags(d.tags);
+    setAllowRsvps(!((eventProp as any)?.rsvpDisabled ?? false));
+    // Re-init when the dialog opens or the edited event changes, not on every parent render.
+  }, [open, eventProp?.id]);
 
   React.useEffect(() => {
     if (!open) return;
@@ -156,7 +165,7 @@ export const CreateEventModal = ({ open, groupId, initialDateIso, event: eventPr
   // Diff selected rooms/resources against existing bookings: POST new, DELETE removed.
   const syncBookings = async (eventId: string): Promise<any[]> => {
     if (!eventId) return [];
-    const existing: any[] = eventProp?.id ? await ApiHelper.get("/eventBookings/event/" + eventId, "ContentApi").catch((): any[] => []) : [];
+    const existing: any[] = eventProp?.id || createdIdRef.current ? await ApiHelper.get("/eventBookings/event/" + eventId, "ContentApi").catch((): any[] => []) : [];
     const { toAdd, toRemove } = diffBookings(eventId, booking, existing);
     let saved: any[] = [];
     if (toAdd.length) saved = await ApiHelper.post("/eventBookings", toAdd, "ContentApi");
@@ -206,7 +215,8 @@ export const CreateEventModal = ({ open, groupId, initialDateIso, event: eventPr
     setSaving(true);
     setError(null);
     try {
-      const saved = await ApiHelper.post("/events", [buildPayload()], "ContentApi");
+      const saved = await ApiHelper.post("/events", [{ ...buildPayload(), id: createdIdRef.current }], "ContentApi");
+      createdIdRef.current = saved?.[0]?.id;
       const bookings = await syncBookings(saved?.[0]?.id);
       finishBookings(bookings);
     } catch (e: any) {
@@ -280,14 +290,24 @@ export const CreateEventModal = ({ open, groupId, initialDateIso, event: eventPr
           const newEvent: EventInterface = { ...ev, id: undefined as any, recurrenceRule: recurring ? rRule : "" };
           const originalEv: EventInterface = await ApiHelper.get("/events/" + eventProp.id, "ContentApi");
           const rrule = EventHelper.getFullRRule(originalEv);
-          rrule.options.until = newEvent.start ? new Date(newEvent.start as any) : new Date();
+          rrule.options.until = endBefore(eventProp.start as any);
           EventHelper.cleanRule(rrule.options);
           originalEv.recurrenceRule = EventHelper.getPartialRRuleString(rrule.options);
           await ApiHelper.post("/events", [originalEv, newEvent], "ContentApi");
           break;
         }
         case "all": {
-          const allEv: EventInterface = { ...ev, recurrenceRule: recurring ? rRule : "" };
+          const originalEv: EventInterface = await ApiHelper.get("/events/" + eventProp.id, "ContentApi");
+          const formStart = new Date(ev.start as any).getTime();
+          const shift = formStart - new Date(eventProp.start as any).getTime();
+          const seriesStart = new Date(new Date(originalEv.start as any).getTime() + shift);
+          const seriesEnd = new Date(seriesStart.getTime() + new Date(ev.end as any).getTime() - formStart);
+          const allEv: EventInterface = {
+            ...ev,
+            start: seriesStart.toISOString() as unknown as Date,
+            end: seriesEnd.toISOString() as unknown as Date,
+            recurrenceRule: recurring ? rRule : ""
+          };
           await ApiHelper.post("/events", [allEv], "ContentApi");
           await syncBookings(eventProp.id);
           break;
@@ -319,12 +339,17 @@ export const CreateEventModal = ({ open, groupId, initialDateIso, event: eventPr
           break;
         }
         case "future": {
-          const ev: EventInterface = { ...eventProp };
-          const rrule = EventHelper.getFullRRule(ev);
-          rrule.options.until = ev.start ? new Date(ev.start as any) : new Date();
-          ev.start = eventProp.start;
-          ev.recurrenceRule = EventHelper.getPartialRRuleString(rrule.options);
-          await ApiHelper.post("/events", [ev], "ContentApi");
+          const originalEv: EventInterface = await ApiHelper.get("/events/" + eventProp.id, "ContentApi");
+          const until = endBefore(eventProp.start as any);
+          const rrule = EventHelper.getFullRRule(originalEv);
+          if (until < rrule.options.dtstart) {
+            await ApiHelper.delete("/events/" + eventProp.id, "ContentApi");
+            break;
+          }
+          rrule.options.until = until;
+          EventHelper.cleanRule(rrule.options);
+          originalEv.recurrenceRule = EventHelper.getPartialRRuleString(rrule.options);
+          await ApiHelper.post("/events", [originalEv], "ContentApi");
           break;
         }
         case "all": {
@@ -401,6 +426,7 @@ export const CreateEventModal = ({ open, groupId, initialDateIso, event: eventPr
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             autoFocus
+            inputProps={{ "data-testid": "event-title-input" }}
           />
           <MarkdownEditor
             value={description}
